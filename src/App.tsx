@@ -1,12 +1,12 @@
-import { ScreenContent } from '@/components/ScreenContent';
+import { PhotoUploadScreen } from '@/components/PhotoUploadScreen';
 import { StatusBar } from 'expo-status-bar';
 
-import './global.css';
+import '../global.css';
 
 export default function App() {
   return (
     <>
-      <ScreenContent title="Home" path="App.tsx"></ScreenContent>
+      <PhotoUploadScreen />
       <StatusBar style="auto" />
     </>
   );
