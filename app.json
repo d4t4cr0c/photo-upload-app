@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "my-expo-app",
-    "slug": "my-expo-app",
+    "name": "photo-upload-app",
+    "slug": "photo-upload-app",
     "version": "1.0.0",
 
     "web": {
