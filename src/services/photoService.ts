@@ -1,41 +1,72 @@
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
-import { v4 as uuidv4 } from 'uuid';
 import { ProductImage } from '@/types';
 
-export const requestPermissions = async (): Promise<boolean> => {
-  const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
-  const { status: mediaStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+// Simple UUID alternative for React Native
+const generateId = () => {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+};
 
-  return cameraStatus === 'granted' && mediaStatus === 'granted';
+export const requestPermissions = async (): Promise<boolean> => {
+  console.log('🔐 Requesting camera permissions...');
+  const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
+  console.log('🔐 Camera permission status:', cameraStatus);
+  
+  console.log('🔐 Requesting media library permissions...');
+  const { status: mediaStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  console.log('🔐 Media library permission status:', mediaStatus);
+
+  const hasPermissions = cameraStatus === 'granted' && mediaStatus === 'granted';
+  console.log('🔐 Final permissions result:', hasPermissions);
+  
+  return hasPermissions;
 };
 
 export const capturePhoto = async (): Promise<ProductImage | null> => {
-  const hasPermissions = await requestPermissions();
-  if (!hasPermissions) {
-    throw new Error('Camera permissions are required to capture photos');
+  console.log('📸 Starting photo capture...');
+  
+  try {
+    console.log('🔐 Requesting permissions...');
+    const hasPermissions = await requestPermissions();
+    console.log('🔐 Permissions result:', hasPermissions);
+    
+    if (!hasPermissions) {
+      throw new Error('Camera permissions are required to capture photos');
+    }
+
+    console.log('📷 Launching camera...');
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      allowsEditing: false,
+      quality: 0.8,
+    });
+
+    console.log('📷 Camera result:', { canceled: result.canceled, assetsLength: result.assets?.length });
+
+    if (result.canceled || !result.assets[0]) {
+      console.log('📷 Camera was canceled or no image selected');
+      return null;
+    }
+
+    const asset = result.assets[0];
+    console.log('🖼️ Resizing image...', { originalUri: asset.uri });
+    
+    const resizedImage = await resizeImage(asset.uri);
+    console.log('🖼️ Image resized successfully:', { newUri: resizedImage.uri });
+
+    const productImage = {
+      id: generateId(),
+      uri: resizedImage.uri,
+      filename: `product_${Date.now()}.jpg`,
+      uploaded: false,
+    };
+    
+    console.log('✅ Photo capture completed:', productImage);
+    return productImage;
+  } catch (error) {
+    console.error('❌ Error in capturePhoto:', error);
+    throw error;
   }
-
-  const result = await ImagePicker.launchCameraAsync({
-    mediaTypes: ['images'],
-    allowsEditing: true,
-    aspect: [4, 3],
-    quality: 0.8,
-  });
-
-  if (result.canceled || !result.assets[0]) {
-    return null;
-  }
-
-  const asset = result.assets[0];
-  const resizedImage = await resizeImage(asset.uri);
-
-  return {
-    id: uuidv4(),
-    uri: resizedImage.uri,
-    filename: `product_${Date.now()}.jpg`,
-    uploaded: false,
-  };
 };
 
 export const selectFromLibrary = async (): Promise<ProductImage[]> => {
@@ -60,7 +91,7 @@ export const selectFromLibrary = async (): Promise<ProductImage[]> => {
     result.assets.map(async (asset) => {
       const resizedImage = await resizeImage(asset.uri);
       return {
-        id: uuidv4(),
+        id: generateId(),
         uri: resizedImage.uri,
         filename: `product_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.jpg`,
         uploaded: false,

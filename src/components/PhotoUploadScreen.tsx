@@ -66,14 +66,29 @@ export const PhotoUploadScreen: React.FC = () => {
   }, []);
 
   const handleCapturePhoto = async () => {
-    if (!product) {
-      createNewProduct();
+    console.log('🔴 BUTTON PRESSED - Take Photo button clicked');
+    
+    let currentProduct = product;
+    if (!currentProduct) {
+      console.log('Creating new product...');
+      try {
+        currentProduct = createNewProduct();
+        console.log('New product created successfully');
+      } catch (error) {
+        console.error('❌ Error creating new product:', error);
+        return;
+      }
+      console.log('New product created, continuing...');
     }
 
+    console.log('About to enter try block');
     try {
-      await capturePhoto();
-    } catch {
-      Alert.alert('Error', 'Failed to capture photo');
+      console.log('Calling hook capturePhoto function...', typeof capturePhoto);
+      await capturePhoto(currentProduct);
+      console.log('Hook capturePhoto completed');
+    } catch (error) {
+      console.error('Error capturing photo:', error);
+      Alert.alert('Error', `Failed to capture photo: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -132,6 +147,14 @@ export const PhotoUploadScreen: React.FC = () => {
     product && product.images.length > 0 && product.status === 'pending' && !isUploading;
   const showReset = product && (product.status === 'completed' || product.status === 'failed');
 
+  // Debug logging
+  console.log('🔍 DEBUG STATE:', {
+    product: product ? `id: ${product.id}, status: ${product.status}, images: ${product.images.length}` : 'null',
+    isUploading,
+    canAddPhotos,
+    canUpload
+  });
+
   return (
     <Container>
       <ScrollView className={styles.container} showsVerticalScrollIndicator={false}>
@@ -152,7 +175,9 @@ export const PhotoUploadScreen: React.FC = () => {
           <View className={styles.buttonContainer}>
             <TouchableOpacity
               className={`${styles.button} ${!canAddPhotos ? styles.buttonDisabled : ''}`}
-              onPress={handleCapturePhoto}
+              onPress={() => {
+                handleCapturePhoto();
+              }}
               disabled={!canAddPhotos}>
               <Ionicons name="camera" size={24} color="white" className={styles.buttonIcon} />
               <Text className={styles.buttonText}>Take Photo</Text>

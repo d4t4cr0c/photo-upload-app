@@ -1,5 +1,9 @@
 import { useState, useCallback } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+
+// Simple UUID alternative for React Native
+const generateId = () => {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+};
 import { Product, ProductImage, WebhookPayload } from '@/types';
 import { capturePhoto, selectFromLibrary } from '@/services/photoService';
 import { uploadMultipleImages } from '@/services/cloudinaryService';
@@ -17,7 +21,7 @@ export const usePhotoUpload = () => {
 
   const createNewProduct = useCallback(() => {
     const newProduct: Product = {
-      id: uuidv4(),
+      id: generateId(),
       images: [],
       status: 'pending',
       createdAt: new Date(),
@@ -29,16 +33,25 @@ export const usePhotoUpload = () => {
 
   const addImages = useCallback(
     (images: ProductImage[]) => {
-      if (!product) return;
+      console.log('🟢 ADD_IMAGES - Called with:', images.length, 'images');
+      console.log('🟢 ADD_IMAGES - Current product:', product ? `exists (${product.id}, ${product.images.length} images)` : 'null');
+      
+      if (!product) {
+        console.log('🟢 ADD_IMAGES - No product, returning early');
+        return;
+      }
 
-      setProduct((prev) =>
-        prev
-          ? {
-              ...prev,
-              images: [...prev.images, ...images],
-            }
-          : null
-      );
+      setProduct((prev) => {
+        if (prev) {
+          const newProduct = {
+            ...prev,
+            images: [...prev.images, ...images],
+          };
+          console.log('🟢 ADD_IMAGES - Updating product with', newProduct.images.length, 'total images');
+          return newProduct;
+        }
+        return null;
+      });
     },
     [product]
   );
@@ -59,14 +72,38 @@ export const usePhotoUpload = () => {
     [product]
   );
 
-  const handleCapturePhoto = useCallback(async () => {
+  const handleCapturePhoto = useCallback(async (targetProduct?: Product) => {
+    console.log('🟡 HOOK - handleCapturePhoto called');
+    const productToUse = targetProduct || product;
+    console.log('🟡 HOOK - Using product:', productToUse ? `exists (${productToUse.id})` : 'null');
+    
     try {
       setError(null);
+      console.log('🟡 HOOK - Calling photoService capturePhoto...');
       const image = await capturePhoto();
-      if (image && product) {
-        addImages([image]);
+      console.log('🟡 HOOK - photoService returned:', image ? 'image captured' : 'no image');
+      
+      if (image && productToUse) {
+        console.log('🟡 HOOK - Adding image to product');
+        // If we have a specific product (passed as parameter), update it directly
+        if (targetProduct) {
+          setProduct((prev) => {
+            // Always update to the targetProduct with the new image
+            const newProduct = {
+              ...targetProduct,
+              images: [...targetProduct.images, image],
+            };
+            console.log('🟡 HOOK - Direct product update with', newProduct.images.length, 'total images');
+            return newProduct;
+          });
+        } else {
+          addImages([image]);
+        }
+      } else {
+        console.log('🟡 HOOK - NOT adding image. Reason:', !image ? 'no image' : 'no product');
       }
     } catch (err) {
+      console.error('🟡 HOOK - Error in handleCapturePhoto:', err);
       setError(err instanceof Error ? err.message : 'Failed to capture photo');
     }
   }, [product, addImages]);

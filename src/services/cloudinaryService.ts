@@ -31,6 +31,14 @@ export const uploadImage = async (
     const cld = getCloudinaryInstance();
     const folder = `${ENV.CLOUDINARY_FOLDER}/product-${productId}`;
     const publicId = `${folder}/${image.filename.replace(/\.[^/.]+$/, '')}`;
+    
+    console.log('🔵 CLOUDINARY - Upload parameters:', {
+      filename: image.filename,
+      folder,
+      publicId,
+      uploadPreset: ENV.CLOUDINARY_UPLOAD_PRESET,
+      uri: image.uri
+    });
 
     return new Promise((resolve) => {
       upload(cld, {
@@ -59,6 +67,11 @@ export const uploadImage = async (
 
             // Check if upload is complete
             if (result.public_id && result.secure_url) {
+              console.log('🔵 CLOUDINARY - Upload successful:', {
+                publicId: result.public_id,
+                secureUrl: result.secure_url,
+                originalFilename: result.original_filename
+              });
               resolve({
                 success: true,
                 publicId: result.public_id,
