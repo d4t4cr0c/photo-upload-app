@@ -16,6 +16,8 @@ const generateId = () => {
 export const usePhotoUpload = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoadingImages, setIsLoadingImages] = useState(false);
+  const [loadingImageCount, setLoadingImageCount] = useState(0);
   const [uploadProgress, setUploadProgress] = useState<{ [imageId: string]: number }>({});
   const [error, setError] = useState<string | null>(null);
 
@@ -91,7 +93,11 @@ export const usePhotoUpload = () => {
       try {
         setError(null);
         console.log('🟡 HOOK - Calling photoService capturePhoto...');
-        const image = await capturePhoto();
+        const image = await capturePhoto((count) => {
+          // This callback is triggered after the camera picker returns with an image
+          setIsLoadingImages(true);
+          setLoadingImageCount(count);
+        });
         console.log('🟡 HOOK - photoService returned:', image ? 'image captured' : 'no image');
 
         if (image && productToUse) {
@@ -120,6 +126,9 @@ export const usePhotoUpload = () => {
       } catch (err) {
         console.error('🟡 HOOK - Error in handleCapturePhoto:', err);
         setError(err instanceof Error ? err.message : 'Failed to capture photo');
+      } finally {
+        setIsLoadingImages(false);
+        setLoadingImageCount(0);
       }
     },
     [product, addImages]
@@ -128,12 +137,19 @@ export const usePhotoUpload = () => {
   const handleSelectFromLibrary = useCallback(async () => {
     try {
       setError(null);
-      const images = await selectFromLibrary();
+      const images = await selectFromLibrary((count) => {
+        // This callback is triggered after the image library picker returns with images
+        setIsLoadingImages(true);
+        setLoadingImageCount(count);
+      });
       if (images.length > 0 && product) {
         addImages(images);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to select photos');
+    } finally {
+      setIsLoadingImages(false);
+      setLoadingImageCount(0);
     }
   }, [product, addImages]);
 
@@ -251,6 +267,8 @@ export const usePhotoUpload = () => {
     }
     setProduct(null);
     setIsUploading(false);
+    setIsLoadingImages(false);
+    setLoadingImageCount(0);
     setUploadProgress({});
     setError(null);
   }, [product]);
@@ -258,6 +276,8 @@ export const usePhotoUpload = () => {
   return {
     product,
     isUploading,
+    isLoadingImages,
+    loadingImageCount,
     uploadProgress,
     error,
     createNewProduct,

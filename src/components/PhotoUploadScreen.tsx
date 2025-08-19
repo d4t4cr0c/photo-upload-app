@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert, ScrollView, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, ScrollView, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { usePhotoUpload } from '@/hooks/usePhotoUpload';
 import { validateEnv } from '@/config/env';
@@ -9,6 +9,8 @@ export const PhotoUploadScreen: React.FC = () => {
   const {
     product,
     isUploading,
+    isLoadingImages,
+    loadingImageCount,
     uploadProgress,
     error,
     createNewProduct,
@@ -45,7 +47,6 @@ export const PhotoUploadScreen: React.FC = () => {
       console.log('New product created, continuing...');
     }
 
-    console.log('About to enter try block');
     try {
       console.log('Calling hook capturePhoto function...', typeof capturePhoto);
       await capturePhoto(currentProduct);
@@ -97,21 +98,21 @@ export const PhotoUploadScreen: React.FC = () => {
       case 'pending':
         return { text: 'Carga tus fotos' };
       case 'uploading':
-        return { text: 'Cargando fotos...' };
+        return { text: 'Cargando fotos ⏳' };
       case 'processing':
-        return { text: 'Creando publicación en MercadoLibre...' };
+        return { text: 'Creando publicación en MercadoLibre ⏳' };
       case 'completed':
-        return { text: '¡Publicación creada!' };
+        return { text: 'Publicación creada ✅' };
       case 'failed':
-        return { text: 'Error al crear publicación' };
+        return { text: '❌ Error al crear publicación' };
       default:
         return null;
     }
   };
 
-  const canAddPhotos = !product || (product.status === 'pending' && !isUploading);
+  const canAddPhotos = !product || (product.status === 'pending' && !isUploading && !isLoadingImages);
   const canUpload =
-    product && product.images.length > 0 && product.status === 'pending' && !isUploading;
+    product && product.images.length > 0 && product.status === 'pending' && !isUploading && !isLoadingImages;
   const showReset = product && (product.status === 'completed' || product.status === 'failed');
 
   // Debug logging
@@ -120,6 +121,8 @@ export const PhotoUploadScreen: React.FC = () => {
       ? `id: ${product.id}, status: ${product.status}, images: ${product.images.length}`
       : 'null',
     isUploading,
+    isLoadingImages,
+    loadingImageCount,
     canAddPhotos,
     canUpload,
   });
@@ -136,7 +139,7 @@ export const PhotoUploadScreen: React.FC = () => {
 
               </Text>
               <Text className="my-6 text-center text-base leading-6 text-gray-200">
-                Sacá o elegí fotos de tu producto para crear una publicación automática en MercadoLibre
+                Toma o elige fotos de tu producto para crear una publicación en MercadoLibre 
               </Text>
             </View>
 
@@ -156,10 +159,8 @@ export const PhotoUploadScreen: React.FC = () => {
                 }}
                 disabled={!canAddPhotos}>
                 <Ionicons name="camera" size={72} color="white" className="mb-1" />
-                <Text className="mt-3 text-sm font-bold text-white text-center ">
-
-                  Tomar foto
-
+                <Text className="mt-3 text-sm font-bold text-white text-center">
+                  Tomar fotos
                 </Text>
               </TouchableOpacity>
 
@@ -171,16 +172,16 @@ export const PhotoUploadScreen: React.FC = () => {
                 disabled={!canAddPhotos}>
                 <Ionicons name="images" size={72} color="white" className="mb-1" />
                 <Text className="mt-3 text-sm font-bold text-white text-center">
-                  
-                  Elegir foto
-                  
+                  Elegir fotos
                 </Text>
               </TouchableOpacity>
             </View>
 
-            {product && product.images.length > 0 && (
+            {/* Image grid - shows both actual images and loading skeletons */}
+            {((product && product.images.length > 0 && product.status === 'pending') || isLoadingImages) && (
               <View className="mb-8 flex-row flex-wrap justify-between">
-                {product.images.map((image) => (
+                {/* Show actual images */}
+                {product && product.images.map((image) => (
                   <View key={image.id} className="relative mb-4 w-[48%]">
                     <Image
                       source={{ uri: image.uri }}
@@ -204,6 +205,18 @@ export const PhotoUploadScreen: React.FC = () => {
                         </View>
                       </View>
                     )}
+                  </View>
+                ))}
+                
+                {/* Show loading skeletons when processing images */}
+                {isLoadingImages && Array.from({ length: loadingImageCount }, (_, index) => (
+                  <View key={`skeleton-${index}`} className="relative mb-4 w-[48%]">
+                    <View className="h-60 w-full rounded-2xl bg-gray-700/50 items-center justify-center">
+                      <ActivityIndicator size="large" color="#93C5FD" />
+                      <Text className="mt-3 text-sm font-semibold text-blue-300">
+                        Procesando...
+                      </Text>
+                    </View>
                   </View>
                 ))}
               </View>
@@ -257,20 +270,20 @@ export const PhotoUploadScreen: React.FC = () => {
                 className="mb-6 rounded-2xl border border-blue-400/30 bg-blue-500/20 p-5"
                 onPress={() => Alert.alert('Listing URL', product.mercadoLibreUrl)}>
                 <Text className="text-center text-lg font-bold text-blue-300">
-                  Ver publicación
+                  Ver publicación 👀
                 </Text>
               </TouchableOpacity>
             )}
 
-            {showReset && (
+            {/* {showReset && (
               <TouchableOpacity
                 className="items-center rounded-2xl bg-green-900 px-8 py-4 shadow-lg"
                 onPress={reset}>
                 <Text className="text-lg font-bold text-blue-100">
-                  Cargar nuevo producto
+                  Cargar nuevo producto ↩️
                 </Text>
               </TouchableOpacity>
-            )}
+            )} */}
           </View>
         </ScrollView>
       </Container>

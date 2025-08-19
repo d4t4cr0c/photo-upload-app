@@ -22,7 +22,7 @@ export const requestPermissions = async (): Promise<boolean> => {
   return hasPermissions;
 };
 
-export const capturePhoto = async (): Promise<ProductImage | null> => {
+export const capturePhoto = async (onLoadingStart?: (count: number) => void): Promise<ProductImage | null> => {
   console.log('📸 Starting photo capture...');
 
   try {
@@ -40,6 +40,11 @@ export const capturePhoto = async (): Promise<ProductImage | null> => {
       allowsEditing: false,
       quality: 0.8,
     });
+
+    // Call loading callback after camera launches and user takes/selects photo
+    if (result.assets && result.assets.length > 0) {
+      onLoadingStart?.(1); // Always 1 image from camera
+    }
 
     console.log('📷 Camera result:', {
       canceled: result.canceled,
@@ -72,7 +77,7 @@ export const capturePhoto = async (): Promise<ProductImage | null> => {
   }
 };
 
-export const selectFromLibrary = async (): Promise<ProductImage[]> => {
+export const selectFromLibrary = async (onLoadingStart?: (count: number) => void): Promise<ProductImage[]> => {
   const hasPermissions = await requestPermissions();
   if (!hasPermissions) {
     throw new Error('Media library permissions are required to select photos');
@@ -85,6 +90,11 @@ export const selectFromLibrary = async (): Promise<ProductImage[]> => {
     quality: 0.8,
     selectionLimit: 10,
   });
+
+  // Call loading callback after library picker returns with images
+  if (result.assets && result.assets.length > 0) {
+    onLoadingStart?.(result.assets.length);
+  }
 
   if (result.canceled || !result.assets) {
     return [];
