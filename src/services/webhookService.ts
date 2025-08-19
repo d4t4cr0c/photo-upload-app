@@ -1,49 +1,23 @@
 import { WebhookPayload } from '@/types';
+import { ENV } from '@/config/env';
 
 // Module-level state
 const listeners = new Map<string, (payload: WebhookPayload) => void>();
-let isListening = false;
 
 export const subscribeToProduct = (
   productId: string,
   callback: (payload: WebhookPayload) => void
 ) => {
   listeners.set(productId, callback);
-  startListening();
+  
+  // Schedule a single check after 30 seconds
+  setTimeout(() => {
+    checkProductStatus(productId, callback);
+  }, 30000);
 };
 
 export const unsubscribeFromProduct = (productId: string) => {
   listeners.delete(productId);
-  if (listeners.size === 0) {
-    stopListening();
-  }
-};
-
-const startListening = () => {
-  if (isListening) return;
-
-  isListening = true;
-  pollForUpdates();
-};
-
-const stopListening = () => {
-  isListening = false;
-};
-
-const pollForUpdates = async () => {
-  if (!isListening) return;
-
-  try {
-    for (const [productId, callback] of listeners.entries()) {
-      await checkProductStatus(productId, callback);
-    }
-  } catch (error) {
-    console.error('Error polling for updates:', error);
-  }
-
-  if (isListening) {
-    setTimeout(() => pollForUpdates(), 5000);
-  }
 };
 
 const checkProductStatus = async (
@@ -51,7 +25,7 @@ const checkProductStatus = async (
   callback: (payload: WebhookPayload) => void
 ) => {
   try {
-    const response = await fetch(`/api/products/${productId}/status`);
+    const response = await fetch(`${ENV.BACKEND_API_URL}/webhook/${productId}/status`);
 
     if (response.ok) {
       const data = await response.json();
@@ -67,9 +41,27 @@ const checkProductStatus = async (
         callback(webhookPayload);
         unsubscribeFromProduct(productId);
       }
+    } else {
+      // Show error if API request fails
+      const errorPayload: WebhookPayload = {
+        productId,
+        status: 'failed',
+        message: `Failed to check product status: ${response.status} ${response.statusText}`,
+      };
+      callback(errorPayload);
+      unsubscribeFromProduct(productId);
     }
   } catch (error) {
     console.error(`Error checking status for product ${productId}:`, error);
+    
+    // Show error if request fails
+    const errorPayload: WebhookPayload = {
+      productId,
+      status: 'failed',
+      message: `Network error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    };
+    callback(errorPayload);
+    unsubscribeFromProduct(productId);
   }
 };
 
@@ -111,5 +103,4 @@ export const processIncomingWebhook = (payload: WebhookPayload) => {
 
 export const clearAllListeners = () => {
   listeners.clear();
-  stopListening();
 };

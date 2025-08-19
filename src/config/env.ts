@@ -4,6 +4,7 @@ interface EnvConfig {
   CLOUDINARY_CLOUD_NAME: string;
   CLOUDINARY_FOLDER: string;
   CLOUDINARY_UPLOAD_PRESET: string;
+  BACKEND_API_URL: string;
   FRONTEND_WEBHOOK_URL?: string;
   FRONTEND_WEBHOOK_SECRET?: string;
 }
@@ -16,6 +17,7 @@ const getEnvConfig = (): EnvConfig => {
     CLOUDINARY_FOLDER: extra?.CLOUDINARY_FOLDER || process.env.CLOUDINARY_FOLDER || 'app-images',
     CLOUDINARY_UPLOAD_PRESET:
       extra?.CLOUDINARY_UPLOAD_PRESET || process.env.CLOUDINARY_UPLOAD_PRESET || '',
+    BACKEND_API_URL: extra?.BACKEND_API_URL || process.env.BACKEND_API_URL || 'http://localhost:3000',
     FRONTEND_WEBHOOK_URL: extra?.FRONTEND_WEBHOOK_URL || process.env.FRONTEND_WEBHOOK_URL,
     FRONTEND_WEBHOOK_SECRET: extra?.FRONTEND_WEBHOOK_SECRET || process.env.FRONTEND_WEBHOOK_SECRET,
   };
