@@ -1,6 +1,6 @@
 import { Cloudinary } from '@cloudinary/url-gen';
 import { upload } from 'cloudinary-react-native';
-import { ProductImage, UploadResult } from '@/types';
+import { ProductImage, UploadResult, BulkUploadOptions } from '@/types';
 import { ENV } from '@/config/env';
 
 // Single instance for the entire app
@@ -31,13 +31,13 @@ export const uploadImage = async (
     const cld = getCloudinaryInstance();
     const folder = `${ENV.CLOUDINARY_FOLDER}/product-${productId}`;
     const publicId = `${folder}/${image.filename.replace(/\.[^/.]+$/, '')}`;
-    
+
     console.log('🔵 CLOUDINARY - Upload parameters:', {
       filename: image.filename,
       folder,
       publicId,
       uploadPreset: ENV.CLOUDINARY_UPLOAD_PRESET,
-      uri: image.uri
+      uri: image.uri,
     });
 
     return new Promise((resolve) => {
@@ -70,7 +70,7 @@ export const uploadImage = async (
               console.log('🔵 CLOUDINARY - Upload successful:', {
                 publicId: result.public_id,
                 secureUrl: result.secure_url,
-                originalFilename: result.original_filename
+                originalFilename: result.original_filename,
               });
               resolve({
                 success: true,
@@ -105,6 +105,95 @@ export const uploadMultipleImages = async (
   }
 
   return results;
+};
+
+export const uploadMultipleImagesBulk = async (
+  images: ProductImage[],
+  productId: string,
+  options: BulkUploadOptions = {}
+): Promise<UploadResult[]> => {
+  const { maxConcurrent = 10, onProgress, onImageComplete } = options;
+  
+  if (images.length === 0) {
+    return [];
+  }
+
+  console.log(`🔵 CLOUDINARY - Bulk upload starting: ${images.length} images with max ${maxConcurrent} concurrent uploads`);
+
+  // Create upload promises for all images
+  const uploadPromises = images.map((image, index) => {
+    return uploadImage(image, productId, (progress) => onProgress?.(index, progress))
+      .then((result) => {
+        console.log(`🔵 CLOUDINARY - Image ${index + 1}/${images.length} completed:`, result.success ? 'success' : 'failed');
+        onImageComplete?.(index, result);
+        return { index, result };
+      })
+      .catch((error) => {
+        const errorResult: UploadResult = {
+          success: false,
+          error: error instanceof Error ? error.message : 'Upload failed',
+        };
+        console.error(`🔵 CLOUDINARY - Image ${index + 1}/${images.length} failed:`, error);
+        onImageComplete?.(index, errorResult);
+        return { index, result: errorResult };
+      });
+  });
+
+  // Process uploads in batches to respect concurrency limits
+  const results: UploadResult[] = new Array(images.length);
+  const batchSize = Math.min(maxConcurrent, images.length);
+  
+  for (let i = 0; i < uploadPromises.length; i += batchSize) {
+    const batch = uploadPromises.slice(i, i + batchSize);
+    console.log(`🔵 CLOUDINARY - Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(uploadPromises.length / batchSize)} (${batch.length} uploads)`);
+    
+    try {
+      const batchResults = await Promise.all(batch);
+      
+      // Place results in correct order
+      batchResults.forEach(({ index, result }) => {
+        results[index] = result;
+      });
+    } catch (error) {
+      console.error('🔵 CLOUDINARY - Batch upload error:', error);
+      // Handle any unexpected errors by filling remaining slots with error results
+      batch.forEach((_, batchIndex) => {
+        const globalIndex = i + batchIndex;
+        if (!results[globalIndex]) {
+          results[globalIndex] = {
+            success: false,
+            error: 'Batch upload failed',
+          };
+        }
+      });
+    }
+  }
+
+  const successCount = results.filter(r => r.success).length;
+  const failureCount = results.length - successCount;
+  
+  console.log(`🔵 CLOUDINARY - Bulk upload completed: ${successCount} successful, ${failureCount} failed`);
+  
+  return results;
+};
+
+// Helper function to automatically choose the best upload method
+export const uploadImagesAuto = async (
+  images: ProductImage[],
+  productId: string,
+  onProgress?: (imageIndex: number, progress: number) => void
+): Promise<UploadResult[]> => {
+  // Use bulk upload for multiple images, sequential for single image
+  if (images.length > 1) {
+    console.log(`🔵 CLOUDINARY - Auto-selecting bulk upload for ${images.length} images`);
+    return uploadMultipleImagesBulk(images, productId, {
+      maxConcurrent: Math.min(10, images.length), // Dynamic concurrency based on image count
+      onProgress,
+    });
+  } else {
+    console.log('🔵 CLOUDINARY - Auto-selecting sequential upload for single image');
+    return uploadMultipleImages(images, productId, onProgress);
+  }
 };
 
 export const createProductFolder = async (productId: string): Promise<boolean> => {

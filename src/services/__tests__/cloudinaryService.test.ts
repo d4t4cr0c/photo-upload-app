@@ -81,7 +81,7 @@ describe('cloudinaryService', () => {
       };
 
       const url = getOptimizedImageUrl(publicId, options);
-      
+
       expect(url).toContain('w_300');
       expect(url).toContain('h_200');
       expect(url).toContain('c_thumb');
@@ -96,7 +96,9 @@ describe('cloudinaryService', () => {
       const url = getOptimizedImageUrl(publicId, options);
 
       expect(url).toContain('w_1920,h_1080');
-      expect(url).toMatch(/^https:\/\/res\.cloudinary\.com\/test-cloud\/image\/upload\/w_\d+,h_\d+,c_fill,q_auto:good,f_auto\//);
+      expect(url).toMatch(
+        /^https:\/\/res\.cloudinary\.com\/test-cloud\/image\/upload\/w_\d+,h_\d+,c_fill,q_auto:good,f_auto\//
+      );
     });
   });
 });

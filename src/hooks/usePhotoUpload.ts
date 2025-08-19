@@ -1,17 +1,17 @@
 import { useState, useCallback } from 'react';
-
-// Simple UUID alternative for React Native
-const generateId = () => {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
-};
 import { Product, ProductImage, WebhookPayload } from '@/types';
 import { capturePhoto, selectFromLibrary } from '@/services/photoService';
-import { uploadMultipleImages } from '@/services/cloudinaryService';
+import { uploadMultipleImages, uploadMultipleImagesBulk, uploadImagesAuto } from '@/services/cloudinaryService';
 import {
   subscribeToProduct,
   unsubscribeFromProduct,
   simulateWebhook,
 } from '@/services/webhookService';
+
+// Simple UUID alternative for React Native
+const generateId = () => {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+};
 
 export const usePhotoUpload = () => {
   const [product, setProduct] = useState<Product | null>(null);
@@ -34,8 +34,11 @@ export const usePhotoUpload = () => {
   const addImages = useCallback(
     (images: ProductImage[]) => {
       console.log('🟢 ADD_IMAGES - Called with:', images.length, 'images');
-      console.log('🟢 ADD_IMAGES - Current product:', product ? `exists (${product.id}, ${product.images.length} images)` : 'null');
-      
+      console.log(
+        '🟢 ADD_IMAGES - Current product:',
+        product ? `exists (${product.id}, ${product.images.length} images)` : 'null'
+      );
+
       if (!product) {
         console.log('🟢 ADD_IMAGES - No product, returning early');
         return;
@@ -47,7 +50,11 @@ export const usePhotoUpload = () => {
             ...prev,
             images: [...prev.images, ...images],
           };
-          console.log('🟢 ADD_IMAGES - Updating product with', newProduct.images.length, 'total images');
+          console.log(
+            '🟢 ADD_IMAGES - Updating product with',
+            newProduct.images.length,
+            'total images'
+          );
           return newProduct;
         }
         return null;
@@ -72,41 +79,51 @@ export const usePhotoUpload = () => {
     [product]
   );
 
-  const handleCapturePhoto = useCallback(async (targetProduct?: Product) => {
-    console.log('🟡 HOOK - handleCapturePhoto called');
-    const productToUse = targetProduct || product;
-    console.log('🟡 HOOK - Using product:', productToUse ? `exists (${productToUse.id})` : 'null');
-    
-    try {
-      setError(null);
-      console.log('🟡 HOOK - Calling photoService capturePhoto...');
-      const image = await capturePhoto();
-      console.log('🟡 HOOK - photoService returned:', image ? 'image captured' : 'no image');
-      
-      if (image && productToUse) {
-        console.log('🟡 HOOK - Adding image to product');
-        // If we have a specific product (passed as parameter), update it directly
-        if (targetProduct) {
-          setProduct((prev) => {
-            // Always update to the targetProduct with the new image
-            const newProduct = {
-              ...targetProduct,
-              images: [...targetProduct.images, image],
-            };
-            console.log('🟡 HOOK - Direct product update with', newProduct.images.length, 'total images');
-            return newProduct;
-          });
+  const handleCapturePhoto = useCallback(
+    async (targetProduct?: Product) => {
+      console.log('🟡 HOOK - handleCapturePhoto called');
+      const productToUse = targetProduct || product;
+      console.log(
+        '🟡 HOOK - Using product:',
+        productToUse ? `exists (${productToUse.id})` : 'null'
+      );
+
+      try {
+        setError(null);
+        console.log('🟡 HOOK - Calling photoService capturePhoto...');
+        const image = await capturePhoto();
+        console.log('🟡 HOOK - photoService returned:', image ? 'image captured' : 'no image');
+
+        if (image && productToUse) {
+          console.log('🟡 HOOK - Adding image to product');
+          // If we have a specific product (passed as parameter), update it directly
+          if (targetProduct) {
+            setProduct((prev) => {
+              // Always update to the targetProduct with the new image
+              const newProduct = {
+                ...targetProduct,
+                images: [...targetProduct.images, image],
+              };
+              console.log(
+                '🟡 HOOK - Direct product update with',
+                newProduct.images.length,
+                'total images'
+              );
+              return newProduct;
+            });
+          } else {
+            addImages([image]);
+          }
         } else {
-          addImages([image]);
+          console.log('🟡 HOOK - NOT adding image. Reason:', !image ? 'no image' : 'no product');
         }
-      } else {
-        console.log('🟡 HOOK - NOT adding image. Reason:', !image ? 'no image' : 'no product');
+      } catch (err) {
+        console.error('🟡 HOOK - Error in handleCapturePhoto:', err);
+        setError(err instanceof Error ? err.message : 'Failed to capture photo');
       }
-    } catch (err) {
-      console.error('🟡 HOOK - Error in handleCapturePhoto:', err);
-      setError(err instanceof Error ? err.message : 'Failed to capture photo');
-    }
-  }, [product, addImages]);
+    },
+    [product, addImages]
+  );
 
   const handleSelectFromLibrary = useCallback(async () => {
     try {
@@ -133,7 +150,7 @@ export const usePhotoUpload = () => {
     });
   }, []);
 
-  const uploadImages = useCallback(async () => {
+  const uploadImages = useCallback(async (uploadMode: 'auto' | 'bulk' | 'sequential' = 'auto') => {
     if (!product || product.images.length === 0) return;
 
     setIsUploading(true);
@@ -141,24 +158,72 @@ export const usePhotoUpload = () => {
     setProduct((prev) => (prev ? { ...prev, status: 'uploading' } : null));
 
     try {
-      const results = await uploadMultipleImages(
-        product.images,
-        product.id,
-        (imageIndex, progress) => {
-          const imageId = product.images[imageIndex]?.id;
-          if (imageId) {
-            setUploadProgress((prev) => ({
-              ...prev,
-              [imageId]: progress,
-            }));
+      let results;
+      
+      if (uploadMode === 'auto') {
+        // Let the service automatically choose the best method
+        console.log('🔵 HOOK - Using auto upload mode for', product.images.length, 'images');
+        results = await uploadImagesAuto(
+          product.images,
+          product.id,
+          (imageIndex, progress) => {
+            const imageId = product.images[imageIndex]?.id;
+            if (imageId) {
+              setUploadProgress((prev) => ({
+                ...prev,
+                [imageId]: progress,
+              }));
+            }
           }
-        }
-      );
+        );
+      } else if (uploadMode === 'bulk' && product.images.length > 1) {
+        // Use bulk upload for multiple images with better performance
+        console.log('🔵 HOOK - Using bulk upload for', product.images.length, 'images');
+        results = await uploadMultipleImagesBulk(
+          product.images,
+          product.id,
+          {
+            maxConcurrent: 8, // Conservative concurrency to avoid rate limits
+            onProgress: (imageIndex, progress) => {
+              const imageId = product.images[imageIndex]?.id;
+              if (imageId) {
+                setUploadProgress((prev) => ({
+                  ...prev,
+                  [imageId]: progress,
+                }));
+              }
+            },
+            onImageComplete: (imageIndex, result) => {
+              const imageId = product.images[imageIndex]?.id;
+              if (imageId) {
+                console.log(`🔵 HOOK - Image ${imageIndex + 1} completed:`, result.success ? 'success' : result.error);
+              }
+            }
+          }
+        );
+      } else {
+        // Use sequential upload for single image or when bulk is disabled
+        console.log('🔵 HOOK - Using sequential upload for', product.images.length, 'images');
+        results = await uploadMultipleImages(
+          product.images,
+          product.id,
+          (imageIndex, progress) => {
+            const imageId = product.images[imageIndex]?.id;
+            if (imageId) {
+              setUploadProgress((prev) => ({
+                ...prev,
+                [imageId]: progress,
+              }));
+            }
+          }
+        );
+      }
 
       const hasErrors = results.some((result) => !result.success);
 
       if (hasErrors) {
-        setError('Some images failed to upload');
+        const errorCount = results.filter(r => !r.success).length;
+        setError(`${errorCount} out of ${results.length} images failed to upload`);
         setProduct((prev) => (prev ? { ...prev, status: 'failed' } : null));
         return;
       }

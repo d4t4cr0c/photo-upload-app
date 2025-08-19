@@ -22,12 +22,21 @@ export default {
       FRONTEND_WEBHOOK_SECRET: process.env.FRONTEND_WEBHOOK_SECRET,
     },
 
-    plugins: [],
+    plugins: [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends.",
+          "cameraPermission": "The app accesses your camera to let you take photos and share them with your friends.",
+          "microphonePermission": false
+        }
+      ]
+    ],
 
     orientation: 'portrait',
     icon: './assets/icon.png',
 
-    userInterfaceStyle: 'light',
+    userInterfaceStyle: 'dark',
 
     splash: {
       image: './assets/splash.png',
@@ -35,14 +44,25 @@ export default {
       backgroundColor: '#ffffff',
     },
     assetBundlePatterns: ['**/*'],
+
     ios: {
       supportsTablet: true,
+      infoPlist: {
+        "NSCameraUsageDescription": "This app needs access to camera to take photos.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to photo library to select images."
+      }
     },
+    
     android: {
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
         backgroundColor: '#ffffff',
       },
-    },
-  },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
+    }
+  }
 };
