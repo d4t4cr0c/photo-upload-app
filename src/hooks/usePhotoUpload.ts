@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Product, ProductImage, WebhookPayload } from '@/types';
 import { capturePhoto, selectFromLibrary } from '@/services/photoService';
-import { uploadImage, uploadMultipleImagesBulk } from '@/services/cloudinaryService';
+import { uploadImageWithWebhook, uploadMultipleImagesBulkWithWebhook } from '@/services/cloudinaryService';
 import {
   subscribeToProduct,
   unsubscribeFromProduct,
@@ -210,10 +210,10 @@ export const usePhotoUpload = () => {
       if (product.images.length === 1) {
         // Use single image upload for one image
         console.log('🔵 HOOK - Using single image upload');
-        const result = await uploadImage(
+        const result = await uploadImageWithWebhook(
           product.images[0],
           product.id,
-          (progress) => {
+          (progress: number) => {
             const imageId = product.images[0]?.id;
             if (imageId) {
               setUploadProgress((prev) => ({
@@ -227,12 +227,12 @@ export const usePhotoUpload = () => {
       } else {
         // Use bulk upload for multiple images
         console.log('🔵 HOOK - Using bulk upload for', product.images.length, 'images');
-        results = await uploadMultipleImagesBulk(
+        results = await uploadMultipleImagesBulkWithWebhook(
           product.images,
           product.id,
           {
             maxConcurrent: 8, // Conservative concurrency to avoid rate limits
-            onProgress: (imageIndex, progress) => {
+            onProgress: (imageIndex: number, progress: number) => {
               const imageId = product.images[imageIndex]?.id;
               if (imageId) {
                 setUploadProgress((prev) => ({
@@ -241,7 +241,7 @@ export const usePhotoUpload = () => {
                 }));
               }
             },
-            onImageComplete: (imageIndex, result) => {
+            onImageComplete: (imageIndex: number, result: any) => {
               const imageId = product.images[imageIndex]?.id;
               if (imageId) {
                 console.log(`🔵 HOOK - Image ${imageIndex + 1} completed:`, result.success ? 'success' : result.error);
@@ -251,10 +251,10 @@ export const usePhotoUpload = () => {
         );
       }
 
-      const hasErrors = results.some((result) => !result.success);
+      const hasErrors = results.some((result: any) => !result.success);
 
       if (hasErrors) {
-        const errorCount = results.filter(r => !r.success).length;
+        const errorCount = results.filter((r: any) => !r.success).length;
         setError(`${errorCount} out of ${results.length} images failed to upload`);
         setProduct((prev) => (prev ? { ...prev, status: 'failed' } : null));
         return;

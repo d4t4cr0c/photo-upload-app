@@ -4,6 +4,37 @@ import { ENV } from '@/config/env';
 // Module-level state
 const listeners = new Map<string, (payload: WebhookPayload) => void>();
 
+// Notify backend when images upload is complete
+export const notifyBackendUploadComplete = async (
+  productId: string,
+  results: any[],
+  success: boolean
+) => {
+  try {
+    const response = await fetch(`${ENV.BACKEND_API_URL}/webhook`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        productId,
+        event: 'images_uploaded',
+        success,
+        uploadResults: results,
+        timestamp: new Date().toISOString(),
+      }),
+    });
+
+    if (response.ok) {
+      console.log(`🔵 WEBHOOK - Upload notification sent successfully for product ${productId}`);
+    } else {
+      console.warn(`🔵 WEBHOOK - Upload notification failed for product ${productId}: ${response.status}`);
+    }
+  } catch (error) {
+    console.error(`🔵 WEBHOOK - Upload notification error for product ${productId}:`, error);
+  }
+};
+
 export const subscribeToProduct = (
   productId: string,
   callback: (payload: WebhookPayload) => void

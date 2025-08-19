@@ -2,6 +2,7 @@ import { Cloudinary } from '@cloudinary/url-gen';
 import { upload } from 'cloudinary-react-native';
 import { ProductImage, UploadResult, BulkUploadOptions } from '@/types';
 import { ENV } from '@/config/env';
+import { notifyBackendUploadComplete } from '@/services/webhookService';
 
 // Single instance for the entire app
 let cloudinaryInstance: Cloudinary | null = null;
@@ -157,6 +158,34 @@ export const uploadMultipleImagesBulk = async (
   const failureCount = results.length - successCount;
   
   console.log(`🔵 CLOUDINARY - Bulk upload completed: ${successCount} successful, ${failureCount} failed`);
+  
+  return results;
+};
+
+// Enhanced upload functions with webhook notifications
+export const uploadImageWithWebhook = async (
+  image: ProductImage,
+  productId: string,
+  onProgress?: (progress: number) => void
+): Promise<UploadResult> => {
+  const result = await uploadImage(image, productId, onProgress);
+  
+  // Send webhook notification
+  await notifyBackendUploadComplete(productId, [result], result.success);
+  
+  return result;
+};
+
+export const uploadMultipleImagesBulkWithWebhook = async (
+  images: ProductImage[],
+  productId: string,
+  options: BulkUploadOptions = {}
+): Promise<UploadResult[]> => {
+  const results = await uploadMultipleImagesBulk(images, productId, options);
+  
+  // Send webhook notification
+  const success = results.every(r => r.success);
+  await notifyBackendUploadComplete(productId, results, success);
   
   return results;
 };
