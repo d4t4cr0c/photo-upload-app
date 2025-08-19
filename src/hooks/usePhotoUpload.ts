@@ -134,18 +134,49 @@ export const usePhotoUpload = () => {
     [product, addImages]
   );
 
-  const handleSelectFromLibrary = useCallback(async () => {
+  const handleSelectFromLibrary = useCallback(async (targetProduct?: Product) => {
+    console.log('🟢 HOOK - handleSelectFromLibrary called');
+    const productToUse = targetProduct || product;
+    console.log(
+      '🟢 HOOK - Using product:',
+      productToUse ? `exists (${productToUse.id})` : 'null'
+    );
+
     try {
       setError(null);
+      console.log('🟢 HOOK - Calling photoService selectFromLibrary...');
       const images = await selectFromLibrary((count) => {
         // This callback is triggered after the image library picker returns with images
         setIsLoadingImages(true);
         setLoadingImageCount(count);
       });
-      if (images.length > 0 && product) {
-        addImages(images);
+      console.log('🟢 HOOK - photoService returned:', images.length, 'images');
+
+      if (images.length > 0 && productToUse) {
+        console.log('🟢 HOOK - Adding images to product');
+        // If we have a specific product (passed as parameter), update it directly
+        if (targetProduct) {
+          setProduct((prev) => {
+            // Always update to the targetProduct with the new images
+            const newProduct = {
+              ...targetProduct,
+              images: [...targetProduct.images, ...images],
+            };
+            console.log(
+              '🟢 HOOK - Direct product update with',
+              newProduct.images.length,
+              'total images'
+            );
+            return newProduct;
+          });
+        } else {
+          addImages(images);
+        }
+      } else {
+        console.log('🟢 HOOK - NOT adding images. Reason:', !images.length ? 'no images' : 'no product');
       }
     } catch (err) {
+      console.error('🟢 HOOK - Error in handleSelectFromLibrary:', err);
       setError(err instanceof Error ? err.message : 'Failed to select photos');
     } finally {
       setIsLoadingImages(false);

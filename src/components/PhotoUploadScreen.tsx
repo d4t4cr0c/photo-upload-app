@@ -61,14 +61,31 @@ export const PhotoUploadScreen: React.FC = () => {
   };
 
   const handleSelectFromLibrary = async () => {
-    if (!product) {
-      createNewProduct();
+    console.log('🔴 BUTTON PRESSED - Select from Library button clicked');
+
+    let currentProduct = product;
+    if (!currentProduct) {
+      console.log('Creating new product...');
+      try {
+        currentProduct = createNewProduct();
+        console.log('New product created successfully');
+      } catch (error) {
+        console.error('❌ Error creating new product:', error);
+        return;
+      }
+      console.log('New product created, continuing...');
     }
 
     try {
-      await selectFromLibrary();
-    } catch {
-      Alert.alert('Error', 'Failed to select photos');
+      console.log('Calling hook selectFromLibrary function...', typeof selectFromLibrary);
+      await selectFromLibrary(currentProduct);
+      console.log('Hook selectFromLibrary completed');
+    } catch (error) {
+      console.error('Error selecting from library:', error);
+      Alert.alert(
+        'Error',
+        `Failed to select photos: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   };
 
@@ -149,36 +166,39 @@ export const PhotoUploadScreen: React.FC = () => {
               </View>
             )}
 
-            <View className="mb-8 flex-row justify-between">
-              <TouchableOpacity
-                className={`mx-2 flex-1 items-center rounded-2xl px-6 py-4 shadow-lg ${
-                  !canAddPhotos ? 'bg-gray-600 opacity-50' : 'bg-gray-600'
-                }`}
-                onPress={() => {
-                  handleCapturePhoto();
-                }}
-                disabled={!canAddPhotos}>
-                <Ionicons name="camera" size={72} color="white" className="mb-1" />
-                <Text className="mt-3 text-sm font-bold text-white text-center">
-                  Tomar fotos
-                </Text>
-              </TouchableOpacity>
+            {(!product || product.status === 'pending') && (
+              <View className="mb-8 flex-row justify-between">
+                  <TouchableOpacity
+                    className={`mx-2 flex-1 items-center rounded-2xl px-6 py-4 shadow-lg ${
+                      !canAddPhotos ? 'bg-gray-600 opacity-50' : 'bg-gray-600'
+                    }`}
+                    onPress={() => {
+                      handleCapturePhoto();
+                    }}
+                    disabled={!canAddPhotos}>
+                    <Ionicons name="camera" size={72} color="white" className="mb-1" />
+                    <Text className="mt-3 text-sm font-bold text-white text-center">
+                      Tomar fotos
+                    </Text>
+                  </TouchableOpacity>
 
-              <TouchableOpacity
-                className={`mx-2 flex-1 items-center rounded-2xl px-6 py-4 shadow-lg ${
-                  !canAddPhotos ? 'bg-gray-600 opacity-50' : 'bg-gray-600'
-                }`}
-                onPress={handleSelectFromLibrary}
-                disabled={!canAddPhotos}>
-                <Ionicons name="images" size={72} color="white" className="mb-1" />
-                <Text className="mt-3 text-sm font-bold text-white text-center">
-                  Elegir fotos
-                </Text>
-              </TouchableOpacity>
-            </View>
+                  <TouchableOpacity
+                    className={`mx-2 flex-1 items-center rounded-2xl px-6 py-4 shadow-lg ${
+                      !canAddPhotos ? 'bg-gray-600 opacity-50' : 'bg-gray-600'
+                    }`}
+                    onPress={handleSelectFromLibrary}
+                    disabled={!canAddPhotos}>
+                    <Ionicons name="images" size={72} color="white" className="mb-1" />
+                    <Text className="mt-3 text-sm font-bold text-white text-center">
+                      Elegir fotos
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )
+            }
 
             {/* Image grid - shows both actual images and loading skeletons */}
-            {((product && product.images.length > 0 && product.status === 'pending') || isLoadingImages) && (
+            {((product && product.images.length > 0) || isLoadingImages) && (
               <View className="mb-8 flex-row flex-wrap justify-between">
                 {/* Show actual images */}
                 {product && product.images.map((image) => (
@@ -233,7 +253,7 @@ export const PhotoUploadScreen: React.FC = () => {
             )}
 
             {product && product.status !== 'pending' && (
-              <View className="mb-6 rounded-2xl border border-white/20 bg-white/10 p-5">
+              <View className="mb-6 rounded-2xl bg-white/10 px-5 py-6">
                 {(() => {
                   const status = getStatusMessage();
                   if (!status) return null;
@@ -267,7 +287,7 @@ export const PhotoUploadScreen: React.FC = () => {
 
             {product?.mercadoLibreUrl && (
               <TouchableOpacity
-                className="mb-6 rounded-2xl border border-blue-400/30 bg-blue-500/20 p-5"
+                className="mb-6 rounded-2xl border border-blue-400/30 bg-blue-500/20 px-5 py-6"
                 onPress={() => Alert.alert('Listing URL', product.mercadoLibreUrl)}>
                 <Text className="text-center text-lg font-bold text-blue-300">
                   Ver publicación 👀
@@ -275,15 +295,15 @@ export const PhotoUploadScreen: React.FC = () => {
               </TouchableOpacity>
             )}
 
-            {/* {showReset && (
+            {showReset && (
               <TouchableOpacity
-                className="items-center rounded-2xl bg-green-900 px-8 py-4 shadow-lg"
+                className="items-center rounded-2xl border border-blue-400/30 bg-green-950 px-8 py-6 shadow-lg"
                 onPress={reset}>
                 <Text className="text-lg font-bold text-blue-100">
                   Cargar nuevo producto ↩️
                 </Text>
               </TouchableOpacity>
-            )} */}
+            )}
           </View>
         </ScrollView>
       </Container>
