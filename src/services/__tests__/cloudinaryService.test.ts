@@ -57,7 +57,7 @@ describe('cloudinaryService', () => {
   describe('createProductFolder', () => {
     it('should return true and log folder creation message', async () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-      const productId = 'product-123';
+      const productId = '123';
 
       const result = await createProductFolder(productId);
 

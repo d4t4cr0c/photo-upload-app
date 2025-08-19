@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Product, ProductImage, WebhookPayload } from '@/types';
 import { capturePhoto, selectFromLibrary } from '@/services/photoService';
-import { uploadMultipleImages, uploadMultipleImagesBulk, uploadImagesAuto } from '@/services/cloudinaryService';
+import { uploadImage, uploadMultipleImagesBulk } from '@/services/cloudinaryService';
 import {
   subscribeToProduct,
   unsubscribeFromProduct,
@@ -197,7 +197,7 @@ export const usePhotoUpload = () => {
     });
   }, []);
 
-  const uploadImages = useCallback(async (uploadMode: 'auto' | 'bulk' | 'sequential' = 'auto') => {
+  const uploadImages = useCallback(async () => {
     if (!product || product.images.length === 0) return;
 
     setIsUploading(true);
@@ -207,14 +207,14 @@ export const usePhotoUpload = () => {
     try {
       let results;
       
-      if (uploadMode === 'auto') {
-        // Let the service automatically choose the best method
-        console.log('🔵 HOOK - Using auto upload mode for', product.images.length, 'images');
-        results = await uploadImagesAuto(
-          product.images,
+      if (product.images.length === 1) {
+        // Use single image upload for one image
+        console.log('🔵 HOOK - Using single image upload');
+        const result = await uploadImage(
+          product.images[0],
           product.id,
-          (imageIndex, progress) => {
-            const imageId = product.images[imageIndex]?.id;
+          (progress) => {
+            const imageId = product.images[0]?.id;
             if (imageId) {
               setUploadProgress((prev) => ({
                 ...prev,
@@ -223,8 +223,9 @@ export const usePhotoUpload = () => {
             }
           }
         );
-      } else if (uploadMode === 'bulk' && product.images.length > 1) {
-        // Use bulk upload for multiple images with better performance
+        results = [result];
+      } else {
+        // Use bulk upload for multiple images
         console.log('🔵 HOOK - Using bulk upload for', product.images.length, 'images');
         results = await uploadMultipleImagesBulk(
           product.images,
@@ -245,22 +246,6 @@ export const usePhotoUpload = () => {
               if (imageId) {
                 console.log(`🔵 HOOK - Image ${imageIndex + 1} completed:`, result.success ? 'success' : result.error);
               }
-            }
-          }
-        );
-      } else {
-        // Use sequential upload for single image or when bulk is disabled
-        console.log('🔵 HOOK - Using sequential upload for', product.images.length, 'images');
-        results = await uploadMultipleImages(
-          product.images,
-          product.id,
-          (imageIndex, progress) => {
-            const imageId = product.images[imageIndex]?.id;
-            if (imageId) {
-              setUploadProgress((prev) => ({
-                ...prev,
-                [imageId]: progress,
-              }));
             }
           }
         );

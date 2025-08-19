@@ -2,6 +2,9 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
+  globals: {
+    __DEV__: true,
+  },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },

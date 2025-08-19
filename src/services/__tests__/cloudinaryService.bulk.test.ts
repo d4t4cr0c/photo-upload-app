@@ -1,4 +1,4 @@
-import { uploadMultipleImagesBulk, uploadImagesAuto } from '../cloudinaryService';
+import { uploadMultipleImagesBulk } from '../cloudinaryService';
 import { ProductImage } from '@/types';
 
 // Mock the cloudinary-react-native module
@@ -109,31 +109,6 @@ describe('Cloudinary Bulk Upload', () => {
         expect(result.success).toBe(false);
         expect(result.error).toBeDefined();
       });
-    });
-  });
-
-  describe('uploadImagesAuto', () => {
-    it('should use bulk upload for multiple images', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-      
-      const results = await uploadImagesAuto(mockImages, 'test123');
-
-      expect(results).toHaveLength(3);
-      expect(consoleSpy).toHaveBeenCalledWith('🔵 CLOUDINARY - Auto-selecting bulk upload for 3 images');
-      
-      consoleSpy.mockRestore();
-    });
-
-    it('should use sequential upload for single image', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-      
-      const singleImage = [mockImages[0]];
-      const results = await uploadImagesAuto(singleImage, 'test123');
-
-      expect(results).toHaveLength(1);
-      expect(consoleSpy).toHaveBeenCalledWith('🔵 CLOUDINARY - Auto-selecting sequential upload for single image');
-      
-      consoleSpy.mockRestore();
     });
   });
 });

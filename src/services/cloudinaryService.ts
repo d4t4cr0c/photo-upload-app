@@ -91,22 +91,6 @@ export const uploadImage = async (
   }
 };
 
-export const uploadMultipleImages = async (
-  images: ProductImage[],
-  productId: string,
-  onProgress?: (imageIndex: number, progress: number) => void
-): Promise<UploadResult[]> => {
-  const results: UploadResult[] = [];
-
-  for (let i = 0; i < images.length; i++) {
-    const image = images[i];
-    const result = await uploadImage(image, productId, (progress) => onProgress?.(i, progress));
-    results.push(result);
-  }
-
-  return results;
-};
-
 export const uploadMultipleImagesBulk = async (
   images: ProductImage[],
   productId: string,
@@ -175,25 +159,6 @@ export const uploadMultipleImagesBulk = async (
   console.log(`🔵 CLOUDINARY - Bulk upload completed: ${successCount} successful, ${failureCount} failed`);
   
   return results;
-};
-
-// Helper function to automatically choose the best upload method
-export const uploadImagesAuto = async (
-  images: ProductImage[],
-  productId: string,
-  onProgress?: (imageIndex: number, progress: number) => void
-): Promise<UploadResult[]> => {
-  // Use bulk upload for multiple images, sequential for single image
-  if (images.length > 1) {
-    console.log(`🔵 CLOUDINARY - Auto-selecting bulk upload for ${images.length} images`);
-    return uploadMultipleImagesBulk(images, productId, {
-      maxConcurrent: Math.min(10, images.length), // Dynamic concurrency based on image count
-      onProgress,
-    });
-  } else {
-    console.log('🔵 CLOUDINARY - Auto-selecting sequential upload for single image');
-    return uploadMultipleImages(images, productId, onProgress);
-  }
 };
 
 export const createProductFolder = async (productId: string): Promise<boolean> => {

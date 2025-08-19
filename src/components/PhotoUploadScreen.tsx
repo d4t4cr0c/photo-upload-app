@@ -97,7 +97,7 @@ export const PhotoUploadScreen: React.FC = () => {
 
     Alert.alert('Crear Publicación', `¿Cargar ${product.images.length} foto(s) y crear publicación?`, [
       { text: 'Cancelar', style: 'cancel' },
-      { text: 'Confirmar', onPress: () => uploadImages('auto') },
+      { text: 'Confirmar', onPress: () => uploadImages() },
     ]);
   };
 
