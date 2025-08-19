@@ -11,7 +11,7 @@ export const notifyBackendUploadComplete = async (
   success: boolean
 ) => {
   try {
-    const response = await fetch(`${ENV.BACKEND_API_URL}/webhook`, {
+    const response = await fetch(`${ENV.BACKEND_API_URL}/webhook/upload`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
