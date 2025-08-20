@@ -1,9 +1,18 @@
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert, ScrollView, Image, ActivityIndicator, Linking } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Alert, ScrollView } from 'react-native';
 import { usePhotoUpload } from '@/hooks/usePhotoUpload';
 import { validateEnv } from '@/config/env';
 import { Container } from './Container';
+import {
+  Header,
+  ErrorMessage,
+  PhotoActions,
+  ImageGrid,
+  UploadButton,
+  StatusMessage,
+  MercadoLibreButton,
+  ResetButton,
+} from './photo-upload-screen';
 
 export const PhotoUploadScreen: React.FC = () => {
   const {
@@ -32,27 +41,18 @@ export const PhotoUploadScreen: React.FC = () => {
   }, []);
 
   const handleCapturePhoto = async () => {
-    console.log('🔴 BUTTON PRESSED - Take Photo button clicked');
-
     let currentProduct = product;
     if (!currentProduct) {
-      console.log('Creating new product...');
       try {
         currentProduct = createNewProduct();
-        console.log('New product created successfully');
       } catch (error) {
-        console.error('❌ Error creating new product:', error);
         return;
       }
-      console.log('New product created, continuing...');
     }
 
     try {
-      console.log('Calling hook capturePhoto function...', typeof capturePhoto);
       await capturePhoto(currentProduct);
-      console.log('Hook capturePhoto completed');
     } catch (error) {
-      console.error('Error capturing photo:', error);
       Alert.alert(
         'Error',
         `Failed to capture photo: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -61,26 +61,18 @@ export const PhotoUploadScreen: React.FC = () => {
   };
 
   const handleSelectFromLibrary = async () => {
-
     let currentProduct = product;
     if (!currentProduct) {
-      console.log('Creating new product...');
       try {
         currentProduct = createNewProduct();
-        console.log('New product created successfully');
       } catch (error) {
-        console.error('❌ Error creating new product:', error);
         return;
       }
-      console.log('New product created, continuing...');
     }
 
     try {
-      console.log('Calling hook selectFromLibrary function...', typeof selectFromLibrary);
       await selectFromLibrary(currentProduct);
-      console.log('Hook selectFromLibrary completed');
     } catch (error) {
-      console.error('Error selecting from library:', error);
       Alert.alert(
         'Error',
         `Failed to select photos: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -101,210 +93,46 @@ export const PhotoUploadScreen: React.FC = () => {
   };
 
   const handleRemoveImage = (imageId: string) => {
-    Alert.alert('Eliminar Foto', '¿Desea eliminar esta foto?', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Eliminar', style: 'destructive', onPress: () => removeImage(imageId) },
-    ]);
-  };
-
-  const getStatusMessage = () => {
-    if (!product) return null;
-
-    switch (product.status) {
-      case 'pending':
-        return { text: 'Carga tus fotos' };
-      case 'uploading':
-        return { text: 'Cargando fotos ⏳' };
-      case 'processing':
-        return { text: 'Creando publicación en MercadoLibre ⏳' };
-      case 'completed':
-        return { text: 'Publicación creada ✅' };
-      case 'failed':
-        return { text: '❌ Error al crear publicación' };
-      default:
-        return null;
-    }
+    removeImage(imageId);
   };
 
   const canAddPhotos = !product || (product.status === 'pending' && !isUploading && !isLoadingImages);
   const canUpload =
     product && product.images.length > 0 && product.status === 'pending' && !isUploading && !isLoadingImages;
-  const showReset = product && (product.status === 'completed' || product.status === 'failed');
 
   return (
     <View className="flex-1 bg-slate-900 ">
       <Container>
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="flex-1 p-6">
-            <View className="mb-8">
-              <Text className="mt-16 text-center text-3xl font-museo-bold text-white">
+            <Header />
 
-                mercado fácil IA ✨
-
-              </Text>
-              <Text className="my-6 text-center text-base leading-6 text-gray-200">
-                Toma o elige fotos de tu producto para crear una publicación en MercadoLibre 
-              </Text>
-            </View>
-
-            {error && (
-              <View className="mb-6 rounded-2xl border border-red-400/30 bg-red-500/20 p-5">
-                <Text className="text-center font-bold text-red-300">{error}</Text>
-              </View>
-            )}
+            {error && <ErrorMessage error={error} />}
 
             {(!product || product.status === 'pending') && (
-              <View className="mb-8 flex-row justify-between">
-                  <TouchableOpacity
-                    className={`mx-2 flex-1 items-center rounded-2xl px-6 py-4 shadow-lg ${
-                      !canAddPhotos ? 'bg-gray-600 opacity-50' : 'bg-gray-600'
-                    }`}
-                    onPress={() => {
-                      handleCapturePhoto();
-                    }}
-                    disabled={!canAddPhotos}>
-                    <Ionicons name="camera" size={72} color="white" className="mb-1" />
-                    <Text className="mt-3 text-sm font-bold text-white text-center">
-                      Tomar fotos
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    className={`mx-2 flex-1 items-center rounded-2xl px-6 py-4 shadow-lg ${
-                      !canAddPhotos ? 'bg-gray-600 opacity-50' : 'bg-gray-600'
-                    }`}
-                    onPress={handleSelectFromLibrary}
-                    disabled={!canAddPhotos}>
-                    <Ionicons name="images" size={72} color="white" className="mb-1" />
-                    <Text className="mt-3 text-sm font-bold text-white text-center">
-                      Elegir fotos
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )
-            }
-
-            {/* Image grid - shows both actual images and loading skeletons */}
-            {((product && product.images.length > 0) || isLoadingImages) && (
-              <View className="mb-8 flex-row flex-wrap justify-between">
-                {/* Show actual images */}
-                {product && product.images.map((image) => (
-                  <View key={image.id} className="relative mb-4 w-[48%]">
-                    <Image
-                      source={{ uri: image.uri }}
-                      className="h-60 w-full rounded-2xl"
-                      resizeMode="cover"
-                    />
-                    {canAddPhotos && (
-                      <TouchableOpacity
-                        className="absolute -right-3 -top-3 h-8 w-8 items-center justify-center rounded-full bg-red-500 shadow-lg"
-                        onPress={() => handleRemoveImage(image.id)}>
-                        <Ionicons name="close" size={16} color="white" />
-                      </TouchableOpacity>
-                    )}
-                    {uploadProgress[image.id] !== undefined && (
-                      <View className="mt-3">
-                        <View className="h-3 rounded-full bg-black/20">
-                          <View
-                            className="h-full rounded-full bg-green-600"
-                            style={{ width: `${uploadProgress[image.id]}%` }}
-                          />
-                        </View>
-                      </View>
-                    )}
-                  </View>
-                ))}
-                
-                {/* Show loading skeletons when processing images */}
-                {isLoadingImages && Array.from({ length: loadingImageCount }, (_, index) => (
-                  <View key={`skeleton-${index}`} className="relative mb-4 w-[48%]">
-                    <View className="h-60 w-full rounded-2xl bg-gray-700/50 items-center justify-center">
-                      <ActivityIndicator size="large" color="#93C5FD" />
-                      <Text className="mt-3 text-sm font-semibold text-blue-300">
-                        Procesando...
-                      </Text>
-                    </View>
-                  </View>
-                ))}
-              </View>
+              <PhotoActions
+                canAddPhotos={canAddPhotos}
+                onCapturePhoto={handleCapturePhoto}
+                onSelectFromLibrary={handleSelectFromLibrary}
+              />
             )}
 
-            {canUpload && (
-              <TouchableOpacity
-                className="mb-8 items-center rounded-2xl bg-green-600 px-8 py-5 shadow-lg"
-                onPress={handleUpload}>
-                <Text className="text-lg font-bold text-white">
-                  Publicar en MercadoLibre
-                </Text>
-              </TouchableOpacity>
-            )}
+            <ImageGrid
+              product={product}
+              isLoadingImages={isLoadingImages}
+              loadingImageCount={loadingImageCount}
+              uploadProgress={uploadProgress}
+              canAddPhotos={canAddPhotos}
+              onRemoveImage={handleRemoveImage}
+            />
 
-            {product && product.status !== 'pending' && (
-              <View className="mb-6 rounded-2xl bg-white/10 px-5 py-6">
-                {(() => {
-                  const status = getStatusMessage();
-                  if (!status) return null;
+            <UploadButton canUpload={!!canUpload} onUpload={handleUpload} />
 
-                  let statusColor = 'text-gray-300';
-                  switch (product.status) {
-                    case 'uploading':
-                      statusColor = 'text-blue-300';
-                      break;
-                    case 'processing':
-                      statusColor = 'text-orange-300';
-                      break;
-                    case 'completed':
-                      statusColor = 'text-green-300';
-                      break;
-                    case 'failed':
-                      statusColor = 'text-red-300';
-                      break;
-                  }
+            <StatusMessage product={product} />
 
-                  return (
-               
-                      <Text className={`text-center text-lg font-bold ${statusColor}`}>
-                        {status.text}
-                      </Text>
-                    
-                  );
-                })()}
-              </View>
-            )}
+            <MercadoLibreButton product={product} />
 
-            {product?.mercadoLibreUrl && (
-              <TouchableOpacity
-                className="mb-6 rounded-2xl border border-blue-400/30 bg-blue-500/20 px-5 py-6"
-                onPress={async () => {
-                  if (product.mercadoLibreUrl) {
-                    try {
-                      const supported = await Linking.canOpenURL(product.mercadoLibreUrl);
-                      if (supported) {
-                        await Linking.openURL(product.mercadoLibreUrl);
-                      } else {
-                        Alert.alert('Error', 'No se puede abrir la URL');
-                      }
-                    } catch (error) {
-                      console.error('Error opening URL:', error);
-                      Alert.alert('Error', 'No se pudo abrir la URL');
-                    }
-                  }
-                }}>
-                <Text className="text-center text-lg font-bold text-blue-300">
-                  Ver publicación 👀
-                </Text>
-              </TouchableOpacity>
-            )}
-
-            {showReset && (
-              <TouchableOpacity
-                className="items-center rounded-2xl border border-blue-400/30 bg-green-950 px-8 py-6 shadow-lg"
-                onPress={reset}>
-                <Text className="text-lg font-bold text-blue-100">
-                  Cargar nuevo producto ↩️
-                </Text>
-              </TouchableOpacity>
-            )}
+            <ResetButton product={product} onReset={reset} />
           </View>
         </ScrollView>
       </Container>

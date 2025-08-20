@@ -33,14 +33,6 @@ export const uploadImage = async (
     const folder = `${ENV.CLOUDINARY_FOLDER}/product-${productId}`;
     const publicId = `${folder}/${image.filename.replace(/\.[^/.]+$/, '')}`;
 
-    console.log('🔵 CLOUDINARY - Upload parameters:', {
-      filename: image.filename,
-      folder,
-      publicId,
-      uploadPreset: ENV.CLOUDINARY_UPLOAD_PRESET,
-      uri: image.uri,
-    });
-
     return new Promise((resolve) => {
       upload(cld, {
         file: image.uri,
@@ -49,47 +41,38 @@ export const uploadImage = async (
           public_id: publicId,
           unsigned: true,
         },
-        callback: (error: any, result: any) => {
+        callback: (error: any, response: any) => {
           if (error) {
-            console.error('Upload callback error:', error);
-            resolve({
+            return resolve({
               success: false,
-              error: error.message || 'Upload failed',
+              error: `Upload error: ${error.message || error}`,
             });
-            return;
           }
 
-          if (result) {
+          if (response && response.secure_url) {
             if (onProgress) {
-              // Progress updates happen through the callback
-              const progress = result.progress || 100;
-              onProgress(Math.round(progress));
+              onProgress(image.id, 100);
             }
 
-            // Check if upload is complete
-            if (result.public_id && result.secure_url) {
-              console.log('🔵 CLOUDINARY - Upload successful:', {
-                publicId: result.public_id,
-                secureUrl: result.secure_url,
-                originalFilename: result.original_filename,
-              });
-              resolve({
-                success: true,
-                publicId: result.public_id,
-                secureUrl: result.secure_url,
-              });
-            }
+            const publicImageUrl = response.secure_url;
+            resolve({
+              success: true,
+              cloudinaryImageId: response.public_id,
+              publicImageUrl,
+            });
+          } else {
+            resolve({
+              success: false,
+              error: 'Invalid response from Cloudinary',
+            });
           }
         },
       });
     });
   } catch (error) {
-    console.error('Cloudinary upload error:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Upload failed',
-    };
+    throw new Error(`Cloudinary upload failed: ${error}`);
   }
+}
 };
 
 export const uploadMultipleImagesBulk = async (
@@ -103,13 +86,10 @@ export const uploadMultipleImagesBulk = async (
     return [];
   }
 
-  console.log(`🔵 CLOUDINARY - Bulk upload starting: ${images.length} images with max ${maxConcurrent} concurrent uploads`);
-
   // Create upload promises for all images
   const uploadPromises = images.map((image, index) => {
     return uploadImage(image, productId, (progress) => onProgress?.(index, progress))
       .then((result) => {
-        console.log(`🔵 CLOUDINARY - Image ${index + 1}/${images.length} completed:`, result.success ? 'success' : 'failed');
         onImageComplete?.(index, result);
         return { index, result };
       })
@@ -118,7 +98,6 @@ export const uploadMultipleImagesBulk = async (
           success: false,
           error: error instanceof Error ? error.message : 'Upload failed',
         };
-        console.error(`🔵 CLOUDINARY - Image ${index + 1}/${images.length} failed:`, error);
         onImageComplete?.(index, errorResult);
         return { index, result: errorResult };
       });
@@ -130,7 +109,6 @@ export const uploadMultipleImagesBulk = async (
   
   for (let i = 0; i < uploadPromises.length; i += batchSize) {
     const batch = uploadPromises.slice(i, i + batchSize);
-    console.log(`🔵 CLOUDINARY - Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(uploadPromises.length / batchSize)} (${batch.length} uploads)`);
     
     try {
       const batchResults = await Promise.all(batch);
@@ -140,7 +118,6 @@ export const uploadMultipleImagesBulk = async (
         results[index] = result;
       });
     } catch (error) {
-      console.error('🔵 CLOUDINARY - Batch upload error:', error);
       // Handle any unexpected errors by filling remaining slots with error results
       batch.forEach((_, batchIndex) => {
         const globalIndex = i + batchIndex;
@@ -156,8 +133,6 @@ export const uploadMultipleImagesBulk = async (
 
   const successCount = results.filter(r => r.success).length;
   const failureCount = results.length - successCount;
-  
-  console.log(`🔵 CLOUDINARY - Bulk upload completed: ${successCount} successful, ${failureCount} failed`);
   
   return results;
 };
@@ -193,9 +168,6 @@ export const uploadMultipleImagesBulkWithWebhook = async (
 export const createProductFolder = async (productId: string): Promise<boolean> => {
   // Folders are created automatically when uploading images to Cloudinary
   // This method exists for API compatibility but doesn't need to do anything
-  console.log(
-    `Product folder will be created automatically: ${ENV.CLOUDINARY_FOLDER}/product-${productId}`
-  );
   return true;
 };
 
@@ -209,7 +181,6 @@ export const getOptimizedImageUrl = (
   } = {}
 ): string => {
   if (!ENV.CLOUDINARY_CLOUD_NAME) {
-    console.error('Cloudinary cloud name not configured');
     return '';
   }
 
