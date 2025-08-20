@@ -11,7 +11,6 @@ export const notifyBackendUploadComplete = async (
   results: any[],
   success: boolean
 ) => {
-  console.log(`🔵 WEBHOOK - Starting upload notification for product ${productId}, success: ${success}, results: ${results.length}`);
   
   try {
     const payload = {
@@ -26,9 +25,6 @@ export const notifyBackendUploadComplete = async (
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
-
-    console.log(`🔵 WEBHOOK - Sending request to: ${ENV.BACKEND_API_URL}/webhook/upload`);
-    console.log(`🔵 WEBHOOK - Headers:`, Object.keys(headers));
     
     const response = await fetch(`${ENV.BACKEND_API_URL}/webhook/upload`, {
       method: 'POST',
@@ -39,7 +35,7 @@ export const notifyBackendUploadComplete = async (
     if (response.ok) {
       console.log(`🔵 WEBHOOK - Upload notification sent successfully for product ${productId}`);
     } else {
-      console.warn(`🔵 WEBHOOK - Upload notification failed for product ${productId}: ${response.status}`);
+      throw new Error(`Upload notification failed for product ${productId}: ${response.status}`);
     }
   } catch (error) {
     console.error(`🔵 WEBHOOK - Upload notification error for product ${productId}:`, error);

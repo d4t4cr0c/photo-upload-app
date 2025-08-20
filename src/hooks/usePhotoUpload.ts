@@ -28,21 +28,17 @@ export const usePhotoUpload = () => {
       status: 'pending',
       createdAt: new Date(),
     };
+
     setProduct(newProduct);
     setError(null);
     return newProduct;
   }, []);
 
   const addImages = useCallback(
+
     (images: ProductImage[]) => {
-      console.log('🟢 ADD_IMAGES - Called with:', images.length, 'images');
-      console.log(
-        '🟢 ADD_IMAGES - Current product:',
-        product ? `exists (${product.id}, ${product.images.length} images)` : 'null'
-      );
 
       if (!product) {
-        console.log('🟢 ADD_IMAGES - No product, returning early');
         return;
       }
 
@@ -52,11 +48,7 @@ export const usePhotoUpload = () => {
             ...prev,
             images: [...prev.images, ...images],
           };
-          console.log(
-            '🟢 ADD_IMAGES - Updating product with',
-            newProduct.images.length,
-            'total images'
-          );
+  
           return newProduct;
         }
         return null;
@@ -135,12 +127,8 @@ export const usePhotoUpload = () => {
   );
 
   const handleSelectFromLibrary = useCallback(async (targetProduct?: Product) => {
-    console.log('🟢 HOOK - handleSelectFromLibrary called');
     const productToUse = targetProduct || product;
-    console.log(
-      '🟢 HOOK - Using product:',
-      productToUse ? `exists (${productToUse.id})` : 'null'
-    );
+
 
     try {
       setError(null);
@@ -150,10 +138,8 @@ export const usePhotoUpload = () => {
         setIsLoadingImages(true);
         setLoadingImageCount(count);
       });
-      console.log('🟢 HOOK - photoService returned:', images.length, 'images');
 
       if (images.length > 0 && productToUse) {
-        console.log('🟢 HOOK - Adding images to product');
         // If we have a specific product (passed as parameter), update it directly
         if (targetProduct) {
           setProduct((prev) => {
@@ -162,11 +148,7 @@ export const usePhotoUpload = () => {
               ...targetProduct,
               images: [...targetProduct.images, ...images],
             };
-            console.log(
-              '🟢 HOOK - Direct product update with',
-              newProduct.images.length,
-              'total images'
-            );
+   
             return newProduct;
           });
         } else {
@@ -209,7 +191,6 @@ export const usePhotoUpload = () => {
       
       if (product.images.length === 1) {
         // Use single image upload for one image
-        console.log('🔵 HOOK - Using single image upload');
         const result = await uploadImageWithWebhook(
           product.images[0],
           product.id,
@@ -226,7 +207,6 @@ export const usePhotoUpload = () => {
         results = [result];
       } else {
         // Use bulk upload for multiple images
-        console.log('🔵 HOOK - Using bulk upload for', product.images.length, 'images');
         results = await uploadMultipleImagesBulkWithWebhook(
           product.images,
           product.id,
@@ -239,12 +219,6 @@ export const usePhotoUpload = () => {
                   ...prev,
                   [imageId]: progress,
                 }));
-              }
-            },
-            onImageComplete: (imageIndex: number, result: any) => {
-              const imageId = product.images[imageIndex]?.id;
-              if (imageId) {
-                console.log(`🔵 HOOK - Image ${imageIndex + 1} completed:`, result.success ? 'success' : result.error);
               }
             }
           }
@@ -262,16 +236,17 @@ export const usePhotoUpload = () => {
 
       setProduct((prev) => (prev ? { ...prev, status: 'processing' } : null));
 
-      // Wait 10 seconds before starting to poll, giving backend time to process
+      // Wait 20 seconds before starting to poll, giving backend time to process
       setTimeout(() => {
         subscribeToProduct(product.id, handleWebhookUpdate);
-      }, 10000);
+      }, 20000);
 
       simulateWebhook(
         product.id,
         true,
         'https://articulo.mercadolibre.com.ar/MLA-123456789-producto-ejemplo'
       );
+      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
       setProduct((prev) => (prev ? { ...prev, status: 'failed' } : null));
