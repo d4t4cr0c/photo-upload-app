@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert, ScrollView, Image, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, ScrollView, Image, ActivityIndicator, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { usePhotoUpload } from '@/hooks/usePhotoUpload';
 import { validateEnv } from '@/config/env';
@@ -61,7 +61,6 @@ export const PhotoUploadScreen: React.FC = () => {
   };
 
   const handleSelectFromLibrary = async () => {
-    console.log('🔴 BUTTON PRESSED - Select from Library button clicked');
 
     let currentProduct = product;
     if (!currentProduct) {
@@ -131,18 +130,6 @@ export const PhotoUploadScreen: React.FC = () => {
   const canUpload =
     product && product.images.length > 0 && product.status === 'pending' && !isUploading && !isLoadingImages;
   const showReset = product && (product.status === 'completed' || product.status === 'failed');
-
-  // Debug logging
-  console.log('🔍 DEBUG STATE:', {
-    product: product
-      ? `id: ${product.id}, status: ${product.status}, images: ${product.images.length}`
-      : 'null',
-    isUploading,
-    isLoadingImages,
-    loadingImageCount,
-    canAddPhotos,
-    canUpload,
-  });
 
   return (
     <View className="flex-1 bg-slate-900 ">
@@ -288,7 +275,21 @@ export const PhotoUploadScreen: React.FC = () => {
             {product?.mercadoLibreUrl && (
               <TouchableOpacity
                 className="mb-6 rounded-2xl border border-blue-400/30 bg-blue-500/20 px-5 py-6"
-                onPress={() => Alert.alert('Listing URL', product.mercadoLibreUrl)}>
+                onPress={async () => {
+                  if (product.mercadoLibreUrl) {
+                    try {
+                      const supported = await Linking.canOpenURL(product.mercadoLibreUrl);
+                      if (supported) {
+                        await Linking.openURL(product.mercadoLibreUrl);
+                      } else {
+                        Alert.alert('Error', 'No se puede abrir la URL');
+                      }
+                    } catch (error) {
+                      console.error('Error opening URL:', error);
+                      Alert.alert('Error', 'No se pudo abrir la URL');
+                    }
+                  }
+                }}>
                 <Text className="text-center text-lg font-bold text-blue-300">
                   Ver publicación 👀
                 </Text>
