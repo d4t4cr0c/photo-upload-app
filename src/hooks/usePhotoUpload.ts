@@ -75,25 +75,18 @@ export const usePhotoUpload = () => {
 
   const handleCapturePhoto = useCallback(
     async (targetProduct?: Product) => {
-      console.log('🟡 HOOK - handleCapturePhoto called');
       const productToUse = targetProduct || product;
-      console.log(
-        '🟡 HOOK - Using product:',
-        productToUse ? `exists (${productToUse.id})` : 'null'
-      );
+ 
 
       try {
         setError(null);
-        console.log('🟡 HOOK - Calling photoService capturePhoto...');
         const image = await capturePhoto((count) => {
           // This callback is triggered after the camera picker returns with an image
           setIsLoadingImages(true);
           setLoadingImageCount(count);
         });
-        console.log('🟡 HOOK - photoService returned:', image ? 'image captured' : 'no image');
 
         if (image && productToUse) {
-          console.log('🟡 HOOK - Adding image to product');
           // If we have a specific product (passed as parameter), update it directly
           if (targetProduct) {
             setProduct((prev) => {
@@ -102,18 +95,13 @@ export const usePhotoUpload = () => {
                 ...targetProduct,
                 images: [...targetProduct.images, image],
               };
-              console.log(
-                '🟡 HOOK - Direct product update with',
-                newProduct.images.length,
-                'total images'
-              );
+          
               return newProduct;
             });
           } else {
             addImages([image]);
           }
         } else {
-          console.log('🟡 HOOK - NOT adding image. Reason:', !image ? 'no image' : 'no product');
         }
       } catch (err) {
         console.error('🟡 HOOK - Error in handleCapturePhoto:', err);
@@ -132,7 +120,6 @@ export const usePhotoUpload = () => {
 
     try {
       setError(null);
-      console.log('🟢 HOOK - Calling photoService selectFromLibrary...');
       const images = await selectFromLibrary((count) => {
         // This callback is triggered after the image library picker returns with images
         setIsLoadingImages(true);
@@ -246,7 +233,7 @@ export const usePhotoUpload = () => {
         true,
         'https://articulo.mercadolibre.com.ar/MLA-123456789-producto-ejemplo'
       );
-      
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
       setProduct((prev) => (prev ? { ...prev, status: 'failed' } : null));

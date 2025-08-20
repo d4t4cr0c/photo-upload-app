@@ -8,33 +8,24 @@ const generateId = () => {
 };
 
 export const requestPermissions = async (): Promise<boolean> => {
-  console.log('🔐 Requesting camera permissions...');
   const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
-  console.log('🔐 Camera permission status:', cameraStatus);
 
-  console.log('🔐 Requesting media library permissions...');
   const { status: mediaStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  console.log('🔐 Media library permission status:', mediaStatus);
 
   const hasPermissions = cameraStatus === 'granted' && mediaStatus === 'granted';
-  console.log('🔐 Final permissions result:', hasPermissions);
 
   return hasPermissions;
 };
 
 export const capturePhoto = async (onLoadingStart?: (count: number) => void): Promise<ProductImage | null> => {
-  console.log('📸 Starting photo capture...');
 
   try {
-    console.log('🔐 Requesting permissions...');
     const hasPermissions = await requestPermissions();
-    console.log('🔐 Permissions result:', hasPermissions);
 
     if (!hasPermissions) {
       throw new Error('Camera permissions are required to capture photos');
     }
 
-    console.log('📷 Launching camera...');
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ['images'],
       allowsEditing: false,
@@ -46,21 +37,14 @@ export const capturePhoto = async (onLoadingStart?: (count: number) => void): Pr
       onLoadingStart?.(1); // Always 1 image from camera
     }
 
-    console.log('📷 Camera result:', {
-      canceled: result.canceled,
-      assetsLength: result.assets?.length,
-    });
 
     if (result.canceled || !result.assets[0]) {
-      console.log('📷 Camera was canceled or no image selected');
       return null;
     }
 
     const asset = result.assets[0];
-    console.log('🖼️ Resizing image...', { originalUri: asset.uri });
 
     const resizedImage = await resizeImage(asset.uri);
-    console.log('🖼️ Image resized successfully:', { newUri: resizedImage.uri });
 
     const productImage = {
       id: generateId(),
@@ -69,7 +53,6 @@ export const capturePhoto = async (onLoadingStart?: (count: number) => void): Pr
       uploaded: false,
     };
 
-    console.log('✅ Photo capture completed:', productImage);
     return productImage;
   } catch (error) {
     console.error('❌ Error in capturePhoto:', error);
