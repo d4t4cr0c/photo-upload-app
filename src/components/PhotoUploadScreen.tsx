@@ -137,9 +137,9 @@ export const PhotoUploadScreen: React.FC = () => {
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="flex-1 p-6">
             <View className="mb-8">
-              <Text className="mt-10 text-center text-3xl font-extrabold text-white">
+              <Text className="mt-16 text-center text-3xl font-museo-bold text-white">
 
-                MercadoFácil IA ✨
+                mercado fácil IA ✨
 
               </Text>
               <Text className="my-6 text-center text-base leading-6 text-gray-200">

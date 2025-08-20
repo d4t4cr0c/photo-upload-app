@@ -31,7 +31,8 @@ export default {
           "cameraPermission": "The app accesses your camera to let you take photos and share them with your friends.",
           "microphonePermission": false
         }
-      ]
+      ],
+      "expo-font"
     ],
 
     orientation: 'portrait',
