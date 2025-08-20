@@ -6,53 +6,30 @@ interface StatusMessageProps {
   product: Product | null;
 }
 
+
+
+
 export const StatusMessage: React.FC<StatusMessageProps> = ({ product }) => {
-  const getStatusMessage = () => {
-    if (!product) return null;
-
-    switch (product.status) {
-      case 'pending':
-        return { text: 'Carga tus fotos' };
-      case 'uploading':
-        return { text: 'Cargando fotos ⏳' };
-      case 'processing':
-        return { text: 'Creando publicación en MercadoLibre ⏳' };
-      case 'completed':
-        return { text: 'Publicación creada ✅' };
-      case 'failed':
-        return { text: '❌ Error al crear publicación' };
-      default:
-        return null;
-    }
-  };
-
+  
   if (!product || product.status === 'pending') {
     return null;
   }
 
-  const status = getStatusMessage();
-  if (!status) return null;
+  const statusInfo = {
+    'uploading': { text: 'Cargando fotos ⏳', color: 'text-blue-300' },
+    'processing': { text: 'Creando publicación en MercadoLibre ⏳', color: 'text-orange-300' },
+    'completed': { text: 'Publicación creada ✅', color: 'text-green-300' },
+    'failed': { text: '❌ Error al crear publicación', color: 'text-red-300' }
+  };
 
-  let statusColor = 'text-gray-300';
-  switch (product.status) {
-    case 'uploading':
-      statusColor = 'text-blue-300';
-      break;
-    case 'processing':
-      statusColor = 'text-orange-300';
-      break;
-    case 'completed':
-      statusColor = 'text-green-300';
-      break;
-    case 'failed':
-      statusColor = 'text-red-300';
-      break;
-  }
+
+  // Access object properties dynamically
+  const currentStatus = statusInfo[product.status];
 
   return (
     <View className="mb-6 rounded-2xl bg-white/10 px-5 py-6">
-      <Text className={`text-center text-lg font-bold ${statusColor}`}>
-        {status.text}
+      <Text className={`text-center text-lg font-bold ${currentStatus.color}`}>
+        {currentStatus.text}
       </Text>
     </View>
   );

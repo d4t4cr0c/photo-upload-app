@@ -1,7 +1,6 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, Alert, ScrollView } from 'react-native';
 import { usePhotoUpload } from '@/hooks/usePhotoUpload';
-import { validateEnv } from '@/config/env';
 import { Container } from './Container';
 import {
   Header,
@@ -29,16 +28,6 @@ export const PhotoUploadScreen: React.FC = () => {
     removeImage,
     reset,
   } = usePhotoUpload();
-
-  useEffect(() => {
-    if (!validateEnv()) {
-      Alert.alert(
-        'Configuration Error',
-        'Please check your environment configuration. Cloudinary credentials are missing.',
-        [{ text: 'OK' }]
-      );
-    }
-  }, []);
 
   const handleCapturePhoto = async () => {
     let currentProduct = product;

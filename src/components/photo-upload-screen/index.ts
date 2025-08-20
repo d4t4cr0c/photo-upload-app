@@ -1,6 +1,7 @@
 export { Header } from './Header';
 export { ErrorMessage } from './ErrorMessage';
 export { PhotoActions } from './PhotoActions';
+export { ActionButton } from './ActionButton';
 export { ImageGrid } from './ImageGrid';
 export { UploadButton } from './UploadButton';
 export { StatusMessage } from './StatusMessage';

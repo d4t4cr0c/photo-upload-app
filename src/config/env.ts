@@ -22,10 +22,6 @@ const getEnvConfig = (): EnvConfig => {
     FRONTEND_WEBHOOK_SECRET: extra?.FRONTEND_WEBHOOK_SECRET || process.env.FRONTEND_WEBHOOK_SECRET,
   };
 
-  // Debug logging for webhook secret
-  console.log('🔵 ENV - Webhook secret configured:', !!config.FRONTEND_WEBHOOK_SECRET);
-  console.log('🔵 ENV - Backend URL:', config.BACKEND_API_URL);
-
   return config;
 };
 

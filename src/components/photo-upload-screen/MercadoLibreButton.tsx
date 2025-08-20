@@ -7,24 +7,27 @@ interface MercadoLibreButtonProps {
 }
 
 export const MercadoLibreButton: React.FC<MercadoLibreButtonProps> = ({ product }) => {
-  const handleOpenUrl = async () => {
-    if (product?.mercadoLibreUrl) {
-      try {
-        const supported = await Linking.canOpenURL(product.mercadoLibreUrl);
-        if (supported) {
-          await Linking.openURL(product.mercadoLibreUrl);
-        } else {
-          Alert.alert('Error', 'No se puede abrir la URL');
-        }
-      } catch (error) {
-        Alert.alert('Error', 'No se pudo abrir la URL');
-      }
-    }
-  };
-
+  // Si no hay URL no renderizar el componente
   if (!product?.mercadoLibreUrl) {
     return null;
   }
+
+  const url = product.mercadoLibreUrl;
+
+  const handleOpenUrl = async () => {
+    try {
+      const supported = await Linking.canOpenURL(url);
+      
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        throw new Error('No se puede abrir la URL');
+      }
+      
+    } catch (error) {
+      Alert.alert('Error', (error as Error).message);
+    }
+  };
 
   return (
     <TouchableOpacity
