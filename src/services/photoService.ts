@@ -1,5 +1,5 @@
 import * as ImagePicker from 'expo-image-picker';
-import * as ImageManipulator from 'expo-image-manipulator';
+import { manipulateAsync, SaveFormat, ImageResult } from 'expo-image-manipulator';
 import { ProductImage } from '@/types';
 
 // Simple UUID alternative for React Native
@@ -115,25 +115,25 @@ export const selectFromLibrary = async (onLoadingStart?: (count: number) => void
   return resizedImages;
 };
 
-const resizeImage = async (uri: string): Promise<ImageManipulator.ImageResult> => {
+const resizeImage = async (uri: string): Promise<ImageResult> => {
   const { width, height } = await getOriginalImageDimensions(uri);
 
   let newWidth = width;
   let newHeight = height;
 
   if (width > height) {
-    if (width > 1200) {
-      newWidth = 1200;
-      newHeight = (height * 1200) / width;
+    if (width > 1500) {
+      newWidth = 1500;
+      newHeight = (height * 1500) / width;
     }
   } else {
-    if (height > 1200) {
-      newHeight = 1200;
-      newWidth = (width * 1200) / height;
+    if (height > 1500) {
+      newHeight = 1500;
+      newWidth = (width * 1500) / height;
     }
   }
 
-  return await ImageManipulator.manipulateAsync(
+  return await manipulateAsync(
     uri,
     [
       {
@@ -145,7 +145,7 @@ const resizeImage = async (uri: string): Promise<ImageManipulator.ImageResult> =
     ],
     {
       compress: 0.8,
-      format: ImageManipulator.SaveFormat.JPEG,
+      format: SaveFormat.JPEG,
     }
   );
 };
@@ -153,6 +153,6 @@ const resizeImage = async (uri: string): Promise<ImageManipulator.ImageResult> =
 const getOriginalImageDimensions = async (
   uri: string
 ): Promise<{ width: number; height: number }> => {
-  const result = await ImageManipulator.manipulateAsync(uri, [], {});
+  const result = await manipulateAsync(uri, [], {});
   return { width: result.width, height: result.height };
 };
