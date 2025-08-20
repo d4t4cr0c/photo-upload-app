@@ -35,6 +35,7 @@ export const PhotoUploadScreen: React.FC = () => {
       try {
         currentProduct = createNewProduct();
       } catch (error) {
+        console.error('Failed to create new product:', error);
         return;
       }
     }
@@ -44,7 +45,7 @@ export const PhotoUploadScreen: React.FC = () => {
     } catch (error) {
       Alert.alert(
         'Error',
-        `Failed to capture photo: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `No es posible capturar la imagen: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
   };
@@ -55,6 +56,7 @@ export const PhotoUploadScreen: React.FC = () => {
       try {
         currentProduct = createNewProduct();
       } catch (error) {
+        console.error('Failed to create new product:', error);
         return;
       }
     }
@@ -64,14 +66,14 @@ export const PhotoUploadScreen: React.FC = () => {
     } catch (error) {
       Alert.alert(
         'Error',
-        `Failed to select photos: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `No es posible seleccionar la imagen: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
   };
 
   const handleUpload = async () => {
     if (!product || product.images.length === 0) {
-      Alert.alert('No Photos', 'Please add some photos before uploading.');
+      Alert.alert('No hay fotos', 'Por favor seleccione fotos antes de cargar');
       return;
     }
 
@@ -86,8 +88,14 @@ export const PhotoUploadScreen: React.FC = () => {
   };
 
   const canAddPhotos = !product || (product.status === 'pending' && !isUploading && !isLoadingImages);
-  const canUpload =
-    product && product.images.length > 0 && product.status === 'pending' && !isUploading && !isLoadingImages;
+  
+  const canUpload = Boolean(
+    product 
+    && product.images.length > 0 
+    && product.status === 'pending' 
+    && !isUploading 
+    && !isLoadingImages
+  );
 
   return (
     <View className="flex-1 bg-slate-900 ">
@@ -115,7 +123,7 @@ export const PhotoUploadScreen: React.FC = () => {
               onRemoveImage={handleRemoveImage}
             />
 
-            <UploadButton canUpload={!!canUpload} onUpload={handleUpload} />
+            <UploadButton canUpload={canUpload} onUpload={handleUpload} />
 
             <StatusMessage product={product} />
 
