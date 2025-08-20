@@ -41,14 +41,18 @@ export const notifyBackendUploadComplete = async (
     };
 
     // Add HMAC signature if webhook secret is configured
+    console.log(`🔵 WEBHOOK - Checking webhook secret: ${ENV.FRONTEND_WEBHOOK_SECRET ? 'FOUND' : 'NOT FOUND'}`);
     if (ENV.FRONTEND_WEBHOOK_SECRET) {
       const signature = await generateHMACSignature(payloadString, ENV.FRONTEND_WEBHOOK_SECRET);
       headers['X-Hub-Signature-256'] = signature;
-      console.log(`🔵 WEBHOOK - Generated HMAC signature for product ${productId}`);
+      console.log(`🔵 WEBHOOK - Generated HMAC signature for product ${productId}: ${signature.substring(0, 20)}...`);
     } else {
       console.warn(`🔵 WEBHOOK - No webhook secret configured, sending unsigned request`);
     }
 
+    console.log(`🔵 WEBHOOK - Sending request to: ${ENV.BACKEND_API_URL}/webhook`);
+    console.log(`🔵 WEBHOOK - Headers:`, Object.keys(headers));
+    
     const response = await fetch(`${ENV.BACKEND_API_URL}/webhook`, {
       method: 'POST',
       headers,

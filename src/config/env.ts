@@ -12,7 +12,7 @@ interface EnvConfig {
 const getEnvConfig = (): EnvConfig => {
   const extra = Constants.expoConfig?.extra;
 
-  return {
+  const config = {
     CLOUDINARY_CLOUD_NAME: extra?.CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME || '',
     CLOUDINARY_FOLDER: extra?.CLOUDINARY_FOLDER || process.env.CLOUDINARY_FOLDER || 'app-images',
     CLOUDINARY_UPLOAD_PRESET:
@@ -21,6 +21,12 @@ const getEnvConfig = (): EnvConfig => {
     FRONTEND_WEBHOOK_URL: extra?.FRONTEND_WEBHOOK_URL || process.env.FRONTEND_WEBHOOK_URL,
     FRONTEND_WEBHOOK_SECRET: extra?.FRONTEND_WEBHOOK_SECRET || process.env.FRONTEND_WEBHOOK_SECRET,
   };
+
+  // Debug logging for webhook secret
+  console.log('🔵 ENV - Webhook secret configured:', !!config.FRONTEND_WEBHOOK_SECRET);
+  console.log('🔵 ENV - Backend URL:', config.BACKEND_API_URL);
+
+  return config;
 };
 
 export const ENV = getEnvConfig();
