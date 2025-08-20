@@ -262,7 +262,10 @@ export const usePhotoUpload = () => {
 
       setProduct((prev) => (prev ? { ...prev, status: 'processing' } : null));
 
-      subscribeToProduct(product.id, handleWebhookUpdate);
+      // Wait 10 seconds before starting to poll, giving backend time to process
+      setTimeout(() => {
+        subscribeToProduct(product.id, handleWebhookUpdate);
+      }, 10000);
 
       simulateWebhook(
         product.id,

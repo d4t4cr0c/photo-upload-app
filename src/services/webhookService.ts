@@ -4,6 +4,7 @@ import * as Crypto from 'expo-crypto';
 
 // Module-level state
 const listeners = new Map<string, (payload: WebhookPayload) => void>();
+const intervals = new Map<string, NodeJS.Timeout>();
 
 // Generate HMAC signature for webhook payload
 const generateHMACSignature = async (payload: string, secret: string): Promise<string> => {
@@ -73,15 +74,29 @@ export const subscribeToProduct = (
   productId: string,
   callback: (payload: WebhookPayload) => void
 ) => {
+  console.log(`🔵 POLLING - Starting continuous polling for product ${productId} (every 10 seconds)`);
   listeners.set(productId, callback);
   
-  // Schedule a single check after 30 seconds
-  setTimeout(() => {
+  // Start continuous polling every 10 seconds
+  const intervalId = setInterval(() => {
+    console.log(`🔵 POLLING - Checking status for product ${productId}...`);
     checkProductStatus(productId, callback);
-  }, 30000);
+  }, 10000);
+  
+  // Store the interval ID so we can clear it later
+  intervals.set(productId, intervalId);
 };
 
 export const unsubscribeFromProduct = (productId: string) => {
+  // Clear the polling interval if it exists
+  const intervalId = intervals.get(productId);
+  if (intervalId) {
+    console.log(`🔵 POLLING - Stopping continuous polling for product ${productId}`);
+    clearInterval(intervalId);
+    intervals.delete(productId);
+  }
+  
+  // Remove the callback
   listeners.delete(productId);
 };
 
@@ -96,6 +111,7 @@ const checkProductStatus = async (
       const data = await response.json();
 
       if (data.status === 'completed' || data.status === 'failed') {
+        console.log(`🔵 POLLING - Product ${productId} status: ${data.status} - stopping polling`);
         const webhookPayload: WebhookPayload = {
           productId,
           status: data.status === 'completed' ? 'success' : 'failed',
@@ -105,6 +121,8 @@ const checkProductStatus = async (
 
         callback(webhookPayload);
         unsubscribeFromProduct(productId);
+      } else {
+        console.log(`🔵 POLLING - Product ${productId} status: ${data.status} - continuing polling`);
       }
     } else {
       // Show error if API request fails
