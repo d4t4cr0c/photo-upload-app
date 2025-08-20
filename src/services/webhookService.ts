@@ -1,25 +1,9 @@
 import { WebhookPayload } from '@/types';
 import { ENV } from '@/config/env';
-import * as Crypto from 'expo-crypto';
 
 // Module-level state
 const listeners = new Map<string, (payload: WebhookPayload) => void>();
 const intervals = new Map<string, NodeJS.Timeout>();
-
-// Generate HMAC signature for webhook payload
-const generateHMACSignature = async (payload: string, secret: string): Promise<string> => {
-  // Simple but effective approach: Hash the secret+payload combination
-  // While not technically HMAC, it's sufficient for webhook verification
-  // and avoids complex HMAC implementation
-  const combined = `${secret}.${payload}.${secret}`;
-  const hash = await Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    combined,
-    { encoding: Crypto.CryptoEncoding.HEX }
-  );
-  
-  return `sha256=${hash}`;
-};
 
 // Notify backend when images upload is complete
 export const notifyBackendUploadComplete = async (
@@ -27,6 +11,8 @@ export const notifyBackendUploadComplete = async (
   results: any[],
   success: boolean
 ) => {
+  console.log(`🔵 WEBHOOK - Starting upload notification for product ${productId}, success: ${success}, results: ${results.length}`);
+  
   try {
     const payload = {
       productId,
@@ -41,20 +27,10 @@ export const notifyBackendUploadComplete = async (
       'Content-Type': 'application/json',
     };
 
-    // Add HMAC signature if webhook secret is configured
-    console.log(`🔵 WEBHOOK - Checking webhook secret: ${ENV.FRONTEND_WEBHOOK_SECRET ? 'FOUND' : 'NOT FOUND'}`);
-    if (ENV.FRONTEND_WEBHOOK_SECRET) {
-      const signature = await generateHMACSignature(payloadString, ENV.FRONTEND_WEBHOOK_SECRET);
-      headers['X-Hub-Signature-256'] = signature;
-      console.log(`🔵 WEBHOOK - Generated HMAC signature for product ${productId}: ${signature.substring(0, 20)}...`);
-    } else {
-      console.warn(`🔵 WEBHOOK - No webhook secret configured, sending unsigned request`);
-    }
-
-    console.log(`🔵 WEBHOOK - Sending request to: ${ENV.BACKEND_API_URL}/webhook`);
+    console.log(`🔵 WEBHOOK - Sending request to: ${ENV.BACKEND_API_URL}/webhook/upload`);
     console.log(`🔵 WEBHOOK - Headers:`, Object.keys(headers));
     
-    const response = await fetch(`${ENV.BACKEND_API_URL}/webhook`, {
+    const response = await fetch(`${ENV.BACKEND_API_URL}/webhook/upload`, {
       method: 'POST',
       headers,
       body: payloadString,
