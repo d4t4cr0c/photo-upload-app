@@ -51,14 +51,13 @@ export const uploadImage = async (
 
           if (response && response.secure_url) {
             if (onProgress) {
-              onProgress(image.id, 100);
+              onProgress(100);
             }
 
-            const publicImageUrl = response.secure_url;
             resolve({
               success: true,
-              cloudinaryImageId: response.public_id,
-              publicImageUrl,
+              publicId: response.public_id,
+              secureUrl: response.secure_url,
             });
           } else {
             resolve({
@@ -72,7 +71,6 @@ export const uploadImage = async (
   } catch (error) {
     throw new Error(`Cloudinary upload failed: ${error}`);
   }
-}
 };
 
 export const uploadMultipleImagesBulk = async (
