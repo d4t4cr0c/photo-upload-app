@@ -32,17 +32,14 @@ export const capturePhoto = async (onLoadingStart?: (count: number) => void): Pr
       quality: 0.8,
     });
 
-    // Call loading callback after camera launches and user takes/selects photo
-    if (result.assets && result.assets.length > 0) {
-      onLoadingStart?.(1); // Always 1 image from camera
-    }
-
-
     if (result.canceled || !result.assets[0]) {
       return null;
     }
 
     const asset = result.assets[0];
+
+    // Call loading callback right before image processing begins
+    onLoadingStart?.(1); // Always 1 image from camera
 
     const resizedImage = await resizeImage(asset.uri);
 
@@ -74,14 +71,12 @@ export const selectFromLibrary = async (onLoadingStart?: (count: number) => void
     selectionLimit: 10,
   });
 
-  // Call loading callback after library picker returns with images
-  if (result.assets && result.assets.length > 0) {
-    onLoadingStart?.(result.assets.length);
-  }
-
   if (result.canceled || !result.assets) {
     return [];
   }
+
+  // Call loading callback right before image processing begins
+  onLoadingStart?.(result.assets.length);
 
   const resizedImages = await Promise.all(
     result.assets.map(async (asset) => {

@@ -34,6 +34,7 @@ export const usePhotoUpload = () => {
     return newProduct;
   }, []);
 
+
   const addImages = useCallback(
 
     (images: ProductImage[]) => {
@@ -117,9 +118,10 @@ export const usePhotoUpload = () => {
   const handleSelectFromLibrary = useCallback(async (targetProduct?: Product) => {
     const productToUse = targetProduct || product;
 
-
     try {
       setError(null);
+      // selectFromLibrary takes a callback as param
+      // state is handled by usePhotoUpload custom hook
       const images = await selectFromLibrary((count) => {
         // This callback is triggered after the image library picker returns with images
         setIsLoadingImages(true);

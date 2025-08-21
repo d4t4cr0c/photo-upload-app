@@ -46,14 +46,14 @@ export const subscribeToProduct = (
   productId: string,
   callback: (payload: WebhookPayload) => void
 ) => {
-  console.log(`🔵 POLLING - Starting continuous polling for product ${productId} (every 10 seconds)`);
+  console.log(`🔵 POLLING - Starting continuous polling for product ${productId} (every 5 seconds)`);
   listeners.set(productId, callback);
   
-  // Start continuous polling every 10 seconds
+  // Start continuous polling every 5 seconds
   const intervalId = setInterval(() => {
     console.log(`🔵 POLLING - Checking status for product ${productId}...`);
     checkProductStatus(productId, callback);
-  }, 10000);
+  }, 5000);
   
   // Store the interval ID so we can clear it later
   intervals.set(productId, intervalId);
@@ -119,6 +119,10 @@ const checkProductStatus = async (
     unsubscribeFromProduct(productId);
   }
 };
+
+
+
+
 
 export const simulateWebhook = async (
   productId: string,
