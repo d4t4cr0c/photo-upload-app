@@ -125,7 +125,7 @@ export const PhotoUploadScreen: React.FC = () => {
 
             <StatusMessage product={product} />
 
-            {errorMsg && <ErrorMessage errorMsg={errorMsg} />}
+            <ErrorMessage errorMsg={errorMsg} />
 
             <MercadoLibreButton product={product} />
 

@@ -7,9 +7,10 @@ interface UploadButtonProps {
 }
 
 export const UploadButton: React.FC<UploadButtonProps> = ({ canUpload, onUpload }) => {
-  if (!canUpload) {
-    return null;
-  }
+  
+  
+  if (!canUpload) return null;
+  
 
   return (
     <TouchableOpacity

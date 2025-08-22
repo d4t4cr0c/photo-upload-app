@@ -8,10 +8,8 @@ interface MercadoLibreButtonProps {
 
 export const MercadoLibreButton: React.FC<MercadoLibreButtonProps> = ({ product }) => {
   // Si no hay URL no renderizar el componente
-  if (!product?.mercadoLibreUrl) {
-    return null;
-  }
-
+  if (!product?.mercadoLibreUrl) return null;
+  
   const url = product.mercadoLibreUrl;
 
   const handleOpenUrl = async () => {

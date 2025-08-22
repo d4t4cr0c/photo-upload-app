@@ -168,6 +168,7 @@ export const usePhotoUpload = () => {
 
   // POLLING UPDATE
   const handlePollingUpdate = useCallback((payload: PollingPayload) => {
+    
     setProduct((currentProduct) => {
       // Fail safely is product is null
       // Or product ID doesn't match the ID sent by the backend
