@@ -73,6 +73,8 @@ export const uploadImage = async (
   }
 };
 
+
+
 export const uploadMultipleImagesBulk = async (
   images: ProductImage[],
   productId: string,
@@ -135,7 +137,8 @@ export const uploadMultipleImagesBulk = async (
   return results;
 };
 
-// Enhanced upload functions with webhook notifications
+
+
 export const uploadImageWithWebhook = async (
   image: ProductImage,
   productId: string,
@@ -182,34 +185,3 @@ export const uploadMultipleImagesBulkWithWebhook = async (
 };
 
 
-
-export const createProductFolder = async (productId: string): Promise<boolean> => {
-  // Folders are created automatically when uploading images to Cloudinary
-  // This method exists for API compatibility but doesn't need to do anything
-  return true;
-};
-
-export const getOptimizedImageUrl = (
-  publicId: string,
-  options: {
-    width?: number;
-    height?: number;
-    crop?: string;
-    quality?: string;
-  } = {}
-): string => {
-  if (!ENV.CLOUDINARY_CLOUD_NAME) {
-    return '';
-  }
-
-  // Construct URL manually for better compatibility
-  const baseUrl = `https://res.cloudinary.com/${ENV.CLOUDINARY_CLOUD_NAME}/image/upload`;
-  const width = options.width || 400;
-  const height = options.height || 400;
-  const crop = options.crop || 'fill';
-  const quality = options.quality || 'auto:good';
-
-  const transformations = `w_${width},h_${height},c_${crop},q_${quality},f_auto`;
-
-  return `${baseUrl}/${transformations}/${publicId}`;
-};

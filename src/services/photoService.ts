@@ -7,17 +7,17 @@ const generateId = () => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 };
 
+// REQUEST PERMISSIONS TO USER
 export const requestPermissions = async (): Promise<boolean> => {
   const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
-
   const { status: mediaStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
   const hasPermissions = cameraStatus === 'granted' && mediaStatus === 'granted';
-
   return hasPermissions;
 };
 
-export const capturePhoto = async (onLoadingStart?: (count: number) => void, onLoadingEnd?: () => void): Promise<ProductImage | null> => {
+
+// TAKE PHOTO
+export const capturePhoto = async (onProcessingStart?: () => void): Promise<ProductImage | null> => {
 
   try {
     const hasPermissions = await requestPermissions();
@@ -26,24 +26,23 @@ export const capturePhoto = async (onLoadingStart?: (count: number) => void, onL
       throw new Error('Camera permissions are required to capture photos');
     }
 
-    // Call loading callback before launching camera
-    // to show at least one skeleton
-    // Otherwise app looks freezed
-    // (but skeleton may be shown before opening camera)
-    //onLoadingStart?.(1);
-
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ['images'],
       allowsEditing: false,
-      quality: 0.8,
+      // Use full quality, resize later, to avoid delay
+      quality: 1.0, 
     });
 
     if (result.canceled || !result.assets[0]) {
-      onLoadingEnd?.();
       return null;
     }
 
     const asset = result.assets[0];
+
+    // Notify that we're about to start processing the image
+    if (onProcessingStart) {
+      onProcessingStart();
+    }
 
     const resizedImage = await resizeImage(asset.uri);
 
@@ -54,46 +53,40 @@ export const capturePhoto = async (onLoadingStart?: (count: number) => void, onL
       uploaded: false,
     };
 
-    onLoadingEnd?.();
     return productImage;
   } catch (error) {
     console.error('❌ Error in capturePhoto:', error);
-    onLoadingEnd?.();
     throw error;
   }
 };
 
 
+
 // Select images from Photo Library
-export const selectFromLibrary = async (onLoadingStart?: (count: number) => void, onLoadingEnd?: () => void): Promise<ProductImage[]> => {
+export const selectFromLibrary = async (onProcessingStart?: (count: number) => void): Promise<ProductImage[]> => {
   try {
     const hasPermissions = await requestPermissions();
     if (!hasPermissions) {
       throw new Error('Media library permissions are required to select photos');
     }
 
-    // Call loading callback before launching library picker
-    // to show at least 1 skeleton.
-    // Otherwise app looks freezed
-    // (but skeleton may be shown before opening library picker)
-    //onLoadingStart?.(1); // Use 1 as placeholder to show at least one skeleton
-
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsMultipleSelection: true,
-      allowsEditing: false,
-      quality: 0.8,
+      allowsEditing: false, // Disable editing to improve performance
+      // Use full quality for selection, resize later, to avoid delay
+      quality: 1.0, 
       selectionLimit: 10,
     });
 
     if (result.canceled || !result.assets) {
-      onLoadingEnd?.();
       return [];
     }
 
-    // Update loading count now that we know how many images were selected
-
-    onLoadingStart?.(result.assets.length);
+    // Notify that we're about to start processing images
+    if (onProcessingStart) {
+      onProcessingStart(result.assets.length);
+    }
 
     const resizedImages = await Promise.all(
       result.assets.map(async (asset) => {
@@ -107,15 +100,14 @@ export const selectFromLibrary = async (onLoadingStart?: (count: number) => void
       })
     );
 
-
-    onLoadingEnd?.();
     return resizedImages;
   } catch (error) {
-    onLoadingEnd?.();
     throw error;
   }
 };
 
+
+// RESIZE IMAGES TO 1500 px
 const resizeImage = async (uri: string): Promise<ImageResult> => {
   const { width, height } = await getOriginalImageDimensions(uri);
 

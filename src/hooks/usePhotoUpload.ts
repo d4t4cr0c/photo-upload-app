@@ -12,6 +12,7 @@ const generateId = () => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 };
 
+// CUSTOM HOOK
 export const usePhotoUpload = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -73,27 +74,19 @@ export const usePhotoUpload = () => {
   );
 
 
-
+  // TAKE PHOTO
   const handleCapturePhoto = useCallback(
     async (targetProduct?: Product) => {
 
       const productToUse = targetProduct || product;
  
       try {
-        const image = await capturePhoto(
-          // onLoadingStart callback
-          (count) => {
-            // This callback is triggered before the camera launches
-            setIsLoadingImages(true);
-            setLoadingImageCount(count);
-          },
-          // onLoadingEnd callback 
-          () => {
-            // This callback is triggered when processing is complete
-            setIsLoadingImages(false);
-            setLoadingImageCount(0);
-          }
-        );
+
+        const image = await capturePhoto(() => {
+          // Show loading state only when we start processing the image (after capture)
+          setIsLoadingImages(true);
+          setLoadingImageCount(1);
+        });
 
         if (image && productToUse) {
           // If we have a specific product (passed as parameter), update it directly
@@ -110,10 +103,12 @@ export const usePhotoUpload = () => {
           } else {
             addImages([image]);
           }
-        } else {
         }
       } catch (err) {
         console.error('🟡 HOOK - Error in handleCapturePhoto:', err);
+      } finally {
+
+        // Finally stop showing skeletons
         setIsLoadingImages(false);
         setLoadingImageCount(0);
       }
@@ -121,58 +116,52 @@ export const usePhotoUpload = () => {
     [product, addImages]
   );
 
-  // Select from Photo Library
+
+
+  // SELECT FROM PHOTO LIBRARY
   const handleSelectFromLibrary = useCallback(async (targetProduct?: Product) => {
     const productToUse = targetProduct || product;
 
     try {
-      // selectFromLibrary takes a callback as param
-      // state is handled by usePhotoUpload custom hook
-      const images = await selectFromLibrary(
-        // onLoadingStart callback
-        (count) => {
-          // This callback is triggered before the library picker launches
-          setIsLoadingImages(true);
-          setLoadingImageCount(count);
-        },
-        // onLoadingEnd callback
-        () => {
-          // This callback is triggered when processing is complete
-          setIsLoadingImages(false);
-          setLoadingImageCount(0);
-        }
-      );
+      
+      const images = await selectFromLibrary((count: number) => {
+        // Show skeletons only when we start processing images (after selection)
+        setIsLoadingImages(true);
+        setLoadingImageCount(count);
+      });
 
-      if (images.length > 0 && productToUse) {
-        // If we have a specific product (passed as parameter), update it directly
-        if (targetProduct) {
-          setProduct(() => {
-            // Always update to the targetProduct with the new images
-            const newProduct = {
-              ...targetProduct,
-              images: [...targetProduct.images, ...images],
-            };
-   
-            return newProduct;
-          });
-        } else {
-          addImages(images);
+      if (images.length > 0) {
+        if (productToUse) {
+          // If we have a specific product (passed as parameter), update it directly
+          if (targetProduct) {
+            setProduct(() => {
+              // Always update to the targetProduct with the new images
+              const newProduct = {
+                ...targetProduct,
+                images: [...targetProduct.images, ...images],
+              };
+     
+              return newProduct;
+            });
+          } else {
+            addImages(images);
+          }
         }
       } else {
-        console.log('🟢 HOOK - NOT adding images. Reason:', !images.length ? 'no images' : 'no product');
+        console.log('🟢 HOOK - NOT adding images. Reason: no images selected');
       }
     } catch (err) {
       console.error('🟢 HOOK - Error in handleSelectFromLibrary:', err);
+    } finally {
 
-      (err instanceof Error ? err.message : 'Failed to select photos');
+      // Finally stop showing skeleton for images
       setIsLoadingImages(false);
       setLoadingImageCount(0);
     }
-    // Note: finally block removed since onLoadingEnd callback handles cleanup
   }, [product, addImages]);
 
 
-
+  // POLLING UPDATE
   const handlePollingUpdate = useCallback((payload: PollingPayload) => {
     setProduct((currentProduct) => {
       // Fail safely is product is null
@@ -189,7 +178,7 @@ export const usePhotoUpload = () => {
   }, []);
 
 
-
+  // UPLOAD IMAGES TO CLOUDINARY
   const uploadImages = useCallback(async () => {
     if (!product || product.images.length === 0) return;
 
@@ -258,6 +247,9 @@ export const usePhotoUpload = () => {
     }
   }, [product, handlePollingUpdate]);
 
+
+
+  // RESET
   const reset = useCallback(() => {
     if (product) {
       unsubscribeFromProduct(product.id);
