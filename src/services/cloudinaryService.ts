@@ -1,5 +1,4 @@
 import { Cloudinary } from '@cloudinary/url-gen';
-import { upload } from 'cloudinary-react-native';
 import { ProductImage, UploadResult, BulkUploadOptions } from '@/types';
 import { ENV } from '@/config/env';
 import { notifyBackendUploadComplete } from '@/services/productStatusService';
@@ -29,47 +28,57 @@ export const uploadImage = async (
       throw new Error('Cloudinary configuration missing');
     }
 
-    const cld = getCloudinaryInstance();
     const folder = `${ENV.CLOUDINARY_FOLDER}/product-${productId}`;
     const publicId = `${folder}/${image.filename.replace(/\.[^/.]+$/, '')}`;
 
-    return new Promise((resolve) => {
-      upload(cld, {
-        file: image.uri,
-        options: {
-          upload_preset: ENV.CLOUDINARY_UPLOAD_PRESET,
-          public_id: publicId,
-          unsigned: true,
-        },
-        callback: (error: any, response: any) => {
-          if (error) {
-            return resolve({
-              success: false,
-              error: `Upload error: ${error.message || error}`,
-            });
-          }
+    // Create FormData for upload
+    const formData = new FormData();
+    formData.append('file', {
+      uri: image.uri,
+      type: 'image/jpeg',
+      name: image.filename,
+    } as any);
+    formData.append('upload_preset', ENV.CLOUDINARY_UPLOAD_PRESET);
+    formData.append('public_id', publicId);
 
-          if (response && response.secure_url) {
-            if (onProgress) {
-              onProgress(100);
-            }
-
-            resolve({
-              success: true,
-              publicId: response.public_id,
-              secureUrl: response.secure_url,
-            });
-          } else {
-            resolve({
-              success: false,
-              error: 'Invalid response from Cloudinary',
-            });
-          }
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${ENV.CLOUDINARY_CLOUD_NAME}/image/upload`,
+      {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
         },
-      });
-    });
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    if (onProgress) {
+      onProgress(100);
+    }
+
+    if (result.secure_url) {
+      return {
+        success: true,
+        publicId: result.public_id,
+        secureUrl: result.secure_url,
+      };
+    } else {
+      return {
+        success: false,
+        error: 'Invalid response from Cloudinary',
+      };
+    }
   } catch (error) {
-    throw new Error(`Cloudinary upload failed: ${error}`);
+    return {
+      success: false,
+      error: `Upload error: ${error instanceof Error ? error.message : error}`,
+    };
   }
 };
 

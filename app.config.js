@@ -52,6 +52,7 @@ export default {
 
     ios: {
       supportsTablet: true,
+      bundleIdentifier: "com.d4v1dl3d4.photouploadapp",
       infoPlist: {
         "NSCameraUsageDescription": "This app needs access to camera to take photos.",
         "NSPhotoLibraryUsageDescription": "This app needs access to photo library to select images."
