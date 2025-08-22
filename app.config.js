@@ -2,8 +2,8 @@ import 'dotenv/config';
 
 export default {
   expo: {
-    name: 'photo-upload-app',
-    slug: 'photo-upload-app',
+    name: 'mercado fácil IA',
+    slug: 'mercado-facil-ia',
     version: '1.0.0',
 
     web: {
