@@ -73,8 +73,6 @@ export const uploadImage = async (
   }
 };
 
-
-
 export const uploadMultipleImagesBulk = async (
   images: ProductImage[],
   productId: string,
@@ -118,6 +116,7 @@ export const uploadMultipleImagesBulk = async (
         results[index] = result;
       });
     } catch (error) {
+      console.error('🔴 CLOUDINARY - Batch upload error:', error);
       // Handle any unexpected errors by filling remaining slots with error results
       batch.forEach((_, batchIndex) => {
         const globalIndex = i + batchIndex;
@@ -131,42 +130,32 @@ export const uploadMultipleImagesBulk = async (
     }
   }
 
-  const successCount = results.filter(r => r.success).length;
-  const failureCount = results.length - successCount;
-  
   return results;
 };
 
 
 
-export const uploadImageWithWebhook = async (
-  image: ProductImage,
-  productId: string,
-  onProgress?: (progress: number) => void
-): Promise<UploadResult> => {
-  const result = await uploadImage(image, productId, onProgress);
-  
-  // Send webhook notification - productStatusService handles failures internally
-  const webhookResult = await notifyBackendUploadComplete(productId, [result], result.success);
-  
-  // If webhook failed, reflect that in the upload result
-  if (!webhookResult.success) {
-    return {
-      ...result,
-      success: false,
-      error: webhookResult.error || 'Backend notification failed'
-    };
-  }
-  
-  return result;
-};
-
-export const uploadMultipleImagesBulkWithWebhook = async (
-  images: ProductImage[],
+export const uploadImagesWithWebhook = async (
+  images: ProductImage | ProductImage[],
   productId: string,
   options: BulkUploadOptions = {}
 ): Promise<UploadResult[]> => {
-  const results = await uploadMultipleImagesBulk(images, productId, options);
+  const imageArray = Array.isArray(images) ? images : [images];
+  
+  let results: UploadResult[];
+  
+  if (imageArray.length === 1) {
+    // Single image upload - convert bulk progress callback to single progress
+    const singleProgressCallback = options.onProgress 
+      ? (progress: number) => options.onProgress!(0, progress)
+      : undefined;
+    
+    const result = await uploadImage(imageArray[0], productId, singleProgressCallback);
+    results = [result];
+  } else {
+    // Multiple image upload
+    results = await uploadMultipleImagesBulk(imageArray, productId, options);
+  }
   
   // Send webhook notification - productStatusService handles failures internally
   const success = results.every(r => r.success);

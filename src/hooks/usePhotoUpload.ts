@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Product, ProductImage, PollingPayload } from '@/types';
 import { capturePhoto, selectFromLibrary } from '@/services/photoService';
-import { uploadImageWithWebhook, uploadMultipleImagesBulkWithWebhook } from '@/services/cloudinaryService';
+import { uploadImagesWithWebhook } from '@/services/cloudinaryService';
 import {
   subscribeToProduct,
   unsubscribeFromProduct,
@@ -186,15 +186,13 @@ export const usePhotoUpload = () => {
     setProduct((currentProduct) => (currentProduct ? { ...currentProduct, status: 'uploading' } : null));
 
     try {
-      let results;
-      
-      if (product.images.length === 1) {
-        // Use single image upload for one image
-        const result = await uploadImageWithWebhook(
-          product.images[0],
-          product.id,
-          (progress: number) => {
-            const imageId = product.images[0]?.id;
+      const results = await uploadImagesWithWebhook(
+        product.images,
+        product.id,
+        {
+          maxConcurrent: 8, // Conservative concurrency to avoid rate limits
+          onProgress: (imageIndex: number, progress: number) => {
+            const imageId = product.images[imageIndex]?.id;
             if (imageId) {
               setUploadProgress((currentProgress) => ({
                 ...currentProgress,
@@ -202,27 +200,8 @@ export const usePhotoUpload = () => {
               }));
             }
           }
-        );
-        results = [result];
-      } else {
-        // Use bulk upload for multiple images
-        results = await uploadMultipleImagesBulkWithWebhook(
-          product.images,
-          product.id,
-          {
-            maxConcurrent: 8, // Conservative concurrency to avoid rate limits
-            onProgress: (imageIndex: number, progress: number) => {
-              const imageId = product.images[imageIndex]?.id;
-              if (imageId) {
-                setUploadProgress((currentProgress) => ({
-                  ...currentProgress,
-                  [imageId]: progress,
-                }));
-              }
-            }
-          }
-        );
-      }
+        }
+      );
 
       const hasErrors = results.some((result: any) => !result.success);
 
@@ -241,6 +220,7 @@ export const usePhotoUpload = () => {
 
 
     } catch (err) {
+      console.error('🔴 HOOK - Error in uploadImages:', err);
       setProduct((currentProduct) => (currentProduct ? { ...currentProduct, status: 'failed' } : null));
     } finally {
       setIsUploading(false);
