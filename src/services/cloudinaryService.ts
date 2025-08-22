@@ -63,6 +63,9 @@ export const uploadImage = async (
     }
 
     if (result.secure_url) {
+
+      console.log('Image uplodad to Cloudinary')
+      
       return {
         success: true,
         publicId: result.public_id,
