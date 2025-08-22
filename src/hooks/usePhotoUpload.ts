@@ -19,7 +19,8 @@ export const usePhotoUpload = () => {
   const [isLoadingImages, setIsLoadingImages] = useState(false);
   const [loadingImageCount, setLoadingImageCount] = useState(0);
   const [uploadProgress, setUploadProgress] = useState<{ [imageId: string]: number }>({});
-  
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
 
   const createNewProduct = useCallback(() => {
     const newProduct: Product = {
@@ -35,9 +36,7 @@ export const usePhotoUpload = () => {
 
 
   const addImages = useCallback(
-
     (images: ProductImage[]) => {
-
       if (!product) {
         return;
       }
@@ -108,6 +107,7 @@ export const usePhotoUpload = () => {
         }
       } catch (err) {
         console.error('🟡 HOOK - Error in handleCapturePhoto:', err);
+        setErrorMsg('Error al tomar foto. Intente nuevamente.');
       } finally {
 
         // Finally stop showing skeletons
@@ -156,6 +156,7 @@ export const usePhotoUpload = () => {
       }
     } catch (err) {
       console.error('🟢 HOOK - Error in handleSelectFromLibrary:', err);
+      setErrorMsg('Error al seleccionar fotos. Intente nuevamente.');
     } finally {
 
       // Finally stop showing skeleton for images
@@ -216,7 +217,6 @@ export const usePhotoUpload = () => {
 
       setProduct((currentProduct) => (currentProduct ? { ...currentProduct, status: 'processing' } : null));
 
-
       // Wait 10 seconds before starting to poll, giving backend time to process
       setTimeout(() => {
         subscribeToProduct(product.id, handlePollingUpdate);
@@ -225,6 +225,7 @@ export const usePhotoUpload = () => {
 
     } catch (err) {
       console.error('🔴 HOOK - Error in uploadImages:', err);
+      setErrorMsg('Error al cargar fotos. Intente nuevamente.')
       setProduct((currentProduct) => (currentProduct ? { ...currentProduct, status: 'failed' } : null));
     } finally {
       setIsUploading(false);
@@ -243,6 +244,7 @@ export const usePhotoUpload = () => {
     setIsLoadingImages(false);
     setLoadingImageCount(0);
     setUploadProgress({});
+    setErrorMsg(null);
   }, [product]);
 
   return {
@@ -258,5 +260,6 @@ export const usePhotoUpload = () => {
     selectFromLibrary: handleSelectFromLibrary,
     uploadImages,
     reset,
+    errorMsg
   };
 };

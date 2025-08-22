@@ -10,6 +10,7 @@ import {
   StatusMessage,
   MercadoLibreButton,
   ResetButton,
+  ErrorMessage
 } from './photo-upload-screen';
 
 export const PhotoUploadScreen: React.FC = () => {
@@ -25,6 +26,7 @@ export const PhotoUploadScreen: React.FC = () => {
     uploadImages,
     removeImage,
     reset,
+    errorMsg
   } = usePhotoUpload();
 
   const handleCapturePhoto = async () => {
@@ -122,6 +124,8 @@ export const PhotoUploadScreen: React.FC = () => {
             <UploadButton canUpload={canUpload} onUpload={handleUpload} />
 
             <StatusMessage product={product} />
+
+            {errorMsg && <ErrorMessage errorMsg={errorMsg} />}
 
             <MercadoLibreButton product={product} />
 
