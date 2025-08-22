@@ -181,6 +181,8 @@ export const usePhotoUpload = () => {
     });
   }, []);
 
+  
+
   const uploadImages = useCallback(async () => {
     if (!product || product.images.length === 0) return;
 

@@ -68,7 +68,7 @@ export const selectFromLibrary = async (onLoadingStart?: (count: number) => void
     }
 
     // Call loading callback before launching library picker
-    console.log('loading starts')
+
     onLoadingStart?.(1); // Use 1 as placeholder to show at least one skeleton
 
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -85,7 +85,7 @@ export const selectFromLibrary = async (onLoadingStart?: (count: number) => void
     }
 
     // Update loading count now that we know how many images were selected
-    console.log('loading updates')
+
     onLoadingStart?.(result.assets.length);
 
     const resizedImages = await Promise.all(
@@ -100,7 +100,7 @@ export const selectFromLibrary = async (onLoadingStart?: (count: number) => void
       })
     );
 
-    console.log('loading ends')
+
     onLoadingEnd?.();
     return resizedImages;
   } catch (error) {
