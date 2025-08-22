@@ -21,6 +21,9 @@ export default {
       BACKEND_API_URL: process.env.BACKEND_API_URL,
       FRONTEND_WEBHOOK_URL: process.env.FRONTEND_WEBHOOK_URL,
       FRONTEND_WEBHOOK_SECRET: process.env.FRONTEND_WEBHOOK_SECRET,
+      eas: {
+        projectId: '6104ca08-7a59-408e-8227-1debc156f029'
+      }
     },
 
     plugins: [
@@ -60,11 +63,12 @@ export default {
         foregroundImage: './assets/adaptive-icon.png',
         backgroundColor: '#ffffff',
       },
-      "permissions": [
+      permissions: [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE"
-      ]
+      ],
+      package: 'com.d4v1dl3d4.photouploadapp'
     }
   }
 };

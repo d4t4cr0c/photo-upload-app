@@ -12,6 +12,12 @@
       "tsconfigPaths": true
     },
 
+    "extra": {
+      "eas": {
+        "projectId": "6104ca08-7a59-408e-8227-1debc156f029"
+      }
+    },
+
     "plugins": [
       [
         "expo-image-picker",
