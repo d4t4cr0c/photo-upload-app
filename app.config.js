@@ -3,7 +3,7 @@ import 'dotenv/config';
 export default {
   expo: {
     name: 'mercado fácil IA',
-    slug: 'mercado-facil-ia',
+    slug: 'photo-upload-app',
     version: '1.0.0',
 
     web: {
@@ -67,9 +67,25 @@ export default {
       permissions: [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE"
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.INTERNET"
       ],
-      package: 'com.d4v1dl3d4.photouploadapp'
+      package: 'com.d4v1dl3d4.photouploadapp',
+      intentFilters: [
+        {
+          action: 'VIEW',
+          autoVerify: true,
+          data: [
+            {
+              scheme: 'https',
+            },
+            {
+              scheme: 'http',
+            }
+          ],
+          category: ['BROWSABLE', 'DEFAULT']
+        }
+      ]
     }
   }
 };

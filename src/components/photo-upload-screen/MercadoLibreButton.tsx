@@ -14,16 +14,26 @@ export const MercadoLibreButton: React.FC<MercadoLibreButtonProps> = ({ product 
 
   const handleOpenUrl = async () => {
     try {
-      const supported = await Linking.canOpenURL(url);
+      console.log('ML Listing URL: ', url);
       
-      if (supported) {
+      // For HTTP/HTTPS URLs, skip canOpenURL check on Android as it's unreliable
+      // and directly try to open the URL
+      if (url.startsWith('http://') || url.startsWith('https://')) {
         await Linking.openURL(url);
       } else {
-        throw new Error('No se puede abrir la URL');
+        // For other schemes, check if supported first
+        const supported = await Linking.canOpenURL(url);
+        
+        if (supported) {
+          await Linking.openURL(url);
+        } else {
+          throw new Error('No se puede abrir la URL');
+        }
       }
       
     } catch (error) {
-      Alert.alert('Error', (error as Error).message);
+      console.error('Error opening URL:', error);
+      Alert.alert('Error', 'No se pudo abrir el enlace de MercadoLibre');
     }
   };
 
