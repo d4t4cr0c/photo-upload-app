@@ -2,7 +2,7 @@ import { Cloudinary } from '@cloudinary/url-gen';
 import { upload } from 'cloudinary-react-native';
 import { ProductImage, UploadResult, BulkUploadOptions } from '@/types';
 import { ENV } from '@/config/env';
-import { notifyBackendUploadComplete } from '@/services/webhookService';
+import { notifyBackendUploadComplete } from '@/services/productStatusService';
 
 // Single instance for the entire app
 let cloudinaryInstance: Cloudinary | null = null;

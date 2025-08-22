@@ -42,17 +42,21 @@ export const notifyBackendUploadComplete = async (
   }
 };
 
+
+
+// Polling logic
 export const subscribeToProduct = (
   productId: string,
-  callback: (payload: PollingPayload) => void
+  pollingUpdatecallback: (payload: PollingPayload) => void
 ) => {
   console.log(`🔵 POLLING - Starting continuous polling for product ${productId} (every 5 seconds)`);
-  listeners.set(productId, callback);
+
+  listeners.set(productId, pollingUpdatecallback);
   
   // Start continuous polling every 5 seconds
   const intervalId = setInterval(() => {
     console.log(`🔵 POLLING - Checking status for product ${productId}...`);
-    checkProductStatus(productId, callback);
+    checkProductStatus(productId, pollingUpdatecallback);
   }, 5000);
   
   // Store the interval ID so we can clear it later
@@ -60,6 +64,7 @@ export const subscribeToProduct = (
 };
 
 export const unsubscribeFromProduct = (productId: string) => {
+
   // Clear the polling interval if it exists
   const intervalId = intervals.get(productId);
   if (intervalId) {

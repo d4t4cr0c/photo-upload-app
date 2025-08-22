@@ -5,7 +5,7 @@ import { uploadImageWithWebhook, uploadMultipleImagesBulkWithWebhook } from '@/s
 import {
   subscribeToProduct,
   unsubscribeFromProduct,
-} from '@/services/webhookService';
+} from '@/services/productStatusService';
 
 // Simple UUID alternative for React Native
 const generateId = () => {
@@ -181,7 +181,7 @@ export const usePhotoUpload = () => {
     });
   }, []);
 
-  
+
 
   const uploadImages = useCallback(async () => {
     if (!product || product.images.length === 0) return;
@@ -240,10 +240,12 @@ export const usePhotoUpload = () => {
 
       setProduct((prev) => (prev ? { ...prev, status: 'processing' } : null));
 
+
       // Wait 10 seconds before starting to poll, giving backend time to process
       setTimeout(() => {
         subscribeToProduct(product.id, handlePollingUpdate);
       }, 10000);
+
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
