@@ -17,7 +17,9 @@ export const requestPermissions = async (): Promise<boolean> => {
 
 
 // TAKE PHOTO
-export const capturePhoto = async (onProcessingStart?: () => void): Promise<ProductImage | null> => {
+export async function capturePhoto(
+  onStartProcessing: () => void
+): Promise<ProductImage | null> {
 
   try {
     const hasPermissions = await requestPermissions();
@@ -33,16 +35,12 @@ export const capturePhoto = async (onProcessingStart?: () => void): Promise<Prod
       quality: 1.0, 
     });
 
-    if (result.canceled || !result.assets[0]) {
-      return null;
-    }
+    if (result.canceled || !result.assets[0]) return null;
+
+    // Start showing skeleton
+    onStartProcessing();
 
     const asset = result.assets[0];
-
-    // Notify that we're about to start processing the image
-    if (onProcessingStart) {
-      onProcessingStart();
-    }
 
     const resizedImage = await resizeImage(asset.uri);
 
@@ -53,7 +51,8 @@ export const capturePhoto = async (onProcessingStart?: () => void): Promise<Prod
       uploaded: false,
     };
 
-    return productImage;
+    return productImage
+    
   } catch (error) {
     console.error('❌ Error in capturePhoto:', error);
     throw error;
@@ -62,10 +61,14 @@ export const capturePhoto = async (onProcessingStart?: () => void): Promise<Prod
 
 
 
-// Select images from Photo Library
-export const selectFromLibrary = async (onProcessingStart?: (count: number) => void): Promise<ProductImage[]> => {
+// SELECT IMAGES FROM PHOTO LIBRARY
+// Function takes a callback as param
+export async function selectFromLibrary(
+  onStartProcessing: (count: number) => void
+): Promise<ProductImage[]> {
   try {
     const hasPermissions = await requestPermissions();
+
     if (!hasPermissions) {
       throw new Error('Media library permissions are required to select photos');
     }
@@ -79,15 +82,13 @@ export const selectFromLibrary = async (onProcessingStart?: (count: number) => v
       selectionLimit: 10,
     });
 
-    if (result.canceled || !result.assets) {
-      return [];
-    }
-
-    // Notify that we're about to start processing images
-    if (onProcessingStart) {
-      onProcessingStart(result.assets.length);
-    }
-
+    // Early return in cancelled or no immages selected
+    if (result.canceled || !result.assets) return [];
+    
+    // Show skeletons while processing images, one for each image
+    onStartProcessing(result.assets.length);
+    
+    // Resize images
     const resizedImages = await Promise.all(
       result.assets.map(async (asset) => {
         const resizedImage = await resizeImage(asset.uri);
@@ -100,8 +101,10 @@ export const selectFromLibrary = async (onProcessingStart?: (count: number) => v
       })
     );
 
-    return resizedImages;
+    return resizedImages
+
   } catch (error) {
+    console.error('❌ Error in selectFromLibrary:', error)
     throw error;
   }
 };

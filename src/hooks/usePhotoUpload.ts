@@ -19,7 +19,7 @@ export const usePhotoUpload = () => {
   const [isLoadingImages, setIsLoadingImages] = useState(false);
   const [loadingImageCount, setLoadingImageCount] = useState(0);
   const [uploadProgress, setUploadProgress] = useState<{ [imageId: string]: number }>({});
-
+  
 
   const createNewProduct = useCallback(() => {
     const newProduct: Product = {
@@ -82,11 +82,13 @@ export const usePhotoUpload = () => {
  
       try {
 
-        const image = await capturePhoto(() => {
-          // Show loading state only when we start processing the image (after capture)
-          setIsLoadingImages(true);
-          setLoadingImageCount(1);
-        });
+        const image = await capturePhoto(
+          // Callback passed to show skeleton while processing: onStartProcessing
+          () => {
+            // Show loading state only when we start processing the image (after capture)
+            setIsLoadingImages(true);
+            setLoadingImageCount(1);
+          });
 
         if (image && productToUse) {
           // If we have a specific product (passed as parameter), update it directly
@@ -124,11 +126,13 @@ export const usePhotoUpload = () => {
 
     try {
       
-      const images = await selectFromLibrary((count: number) => {
-        // Show skeletons only when we start processing images (after selection)
-        setIsLoadingImages(true);
-        setLoadingImageCount(count);
-      });
+      const images = await selectFromLibrary(
+        // Callback passed to start showing skeleton while processing: onStartProcessing
+        (count: number) => {
+          setIsLoadingImages(true);
+          setLoadingImageCount(count);
+        }
+      );
 
       if (images.length > 0) {
         if (productToUse) {

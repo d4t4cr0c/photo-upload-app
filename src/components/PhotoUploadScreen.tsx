@@ -126,6 +126,7 @@ export const PhotoUploadScreen: React.FC = () => {
             <MercadoLibreButton product={product} />
 
             <ResetButton product={product} onReset={reset} />
+            
           </View>
         </ScrollView>
       </Container>
