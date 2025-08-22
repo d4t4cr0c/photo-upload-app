@@ -27,6 +27,9 @@ export const capturePhoto = async (onLoadingStart?: (count: number) => void, onL
     }
 
     // Call loading callback before launching camera
+    // to show at least one skeleton
+    // Otherwise app looks freezed
+    // Skeleton is shown after photo is taken
     onLoadingStart?.(1);
 
     const result = await ImagePicker.launchCameraAsync({
@@ -68,6 +71,9 @@ export const selectFromLibrary = async (onLoadingStart?: (count: number) => void
     }
 
     // Call loading callback before launching library picker
+    // to show at least 1 skeleton.
+    // Otherwise app looks freezed
+    // Skeleton is shown after photos are selected
 
     onLoadingStart?.(1); // Use 1 as placeholder to show at least one skeleton
 

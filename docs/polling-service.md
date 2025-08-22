@@ -81,6 +81,52 @@ interface PollingPayload {
 }
 ```
 
+## Defense in Depth
+
+The service implements multiple layers of protection to ensure data integrity:
+
+### UI-Level Protection
+- Reset button only appears after completion (`completed`/`failed` status)
+- Photo action buttons disabled during processing
+- Upload button disabled unless status is `pending`
+- Single product workflow prevents concurrent operations
+
+### Application-Level Protection
+```typescript
+if (!currentProduct || currentProduct.id !== payload.productId) return currentProduct;
+```
+
+This validation in `handlePollingUpdate` provides crucial safeguards against:
+
+#### Backend-Level Issues
+- **Backend Race Conditions**: Delayed processing from previous products
+- **Database Issues**: Cross-contamination of product data between requests
+- **Multiple Instances**: Conflicting updates from different backend servers
+- **Backend Bugs**: Incorrect routing or ID resolution errors
+
+#### Infrastructure Issues
+- **Load Balancer Problems**: Requests routed to wrong backend instances
+- **Cached Responses**: Stale data returning wrong product information
+- **CDN/Proxy Issues**: Network infrastructure mixing up product IDs
+- **Network Delays**: Out-of-order delivery of polling responses
+
+#### Real-World Scenario
+```typescript
+// User uploads Product A (id: "abc123")
+// Backend processes Product A successfully  
+// User resets and starts Product B (id: "def456")
+// Backend bug sends late update: { productId: "abc123", status: "completed" }
+// Without ID check: Product B incorrectly marked as completed ❌
+// With ID check: Update ignored, Product B maintains correct state ✅
+```
+
+### Service-Level Protection
+- Automatic cleanup via `unsubscribeFromProduct()` on completion
+- Interval management prevents memory leaks
+- Error handling with graceful degradation
+
+This **defense in depth** approach ensures the application remains stable even when external systems behave unexpectedly.
+
 ## Error Handling
 
 The service implements comprehensive error handling:

@@ -44,19 +44,22 @@ export const notifyBackendUploadComplete = async (
 
 
 
-// Polling logic
+// SHORT POLL LOGIC
 export const subscribeToProduct = (
   productId: string,
-  pollingUpdatecallback: (payload: PollingPayload) => void
+  pollingUpdateCallback: (payload: PollingPayload) => void
 ) => {
   console.log(`🔵 POLLING - Starting continuous polling for product ${productId} (every 5 seconds)`);
 
-  listeners.set(productId, pollingUpdatecallback);
+  listeners.set(productId, pollingUpdateCallback);
   
   // Start continuous polling every 5 seconds
   const intervalId = setInterval(() => {
+
     console.log(`🔵 POLLING - Checking status for product ${productId}...`);
-    checkProductStatus(productId, pollingUpdatecallback);
+   
+    checkProductStatus(productId, pollingUpdateCallback);
+
   }, 5000);
   
   // Store the interval ID so we can clear it later
@@ -80,10 +83,10 @@ export const unsubscribeFromProduct = (productId: string) => {
 
 
 
-// POLL backend every 5 seconds to check product listing status
+// POLL backend to check product listing status
 const checkProductStatus = async (
   productId: string,
-  callback: (payload: PollingPayload) => void
+  pollingUpdateCallback: (payload: PollingPayload) => void
 ) => {
   try {
     const response = await fetch(`${ENV.BACKEND_API_URL}/webhook/${productId}/status`);
@@ -99,7 +102,7 @@ const checkProductStatus = async (
         product: data.product,
       };
 
-      callback(webhookPayload);
+      pollingUpdateCallback(webhookPayload);
 
       // Only stop polling when processing is actually finished
       if (data.status === 'completed' || data.status === 'failed') {
@@ -122,7 +125,8 @@ const checkProductStatus = async (
       status: 'failed',
       message: `Error checking status: ${error instanceof Error ? error.message : 'Unknown error'}`,
     };
-    callback(errorPayload);
+    
+    pollingUpdateCallback(errorPayload);
     unsubscribeFromProduct(productId);
   }
 };

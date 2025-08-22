@@ -42,11 +42,11 @@ export const usePhotoUpload = () => {
         return;
       }
 
-      setProduct((prev) => {
-        if (prev) {
+      setProduct((currentProduct) => {
+        if (currentProduct) {
           const newProduct = {
-            ...prev,
-            images: [...prev.images, ...images],
+            ...currentProduct,
+            images: [...currentProduct.images, ...images],
           };
   
           return newProduct;
@@ -61,11 +61,11 @@ export const usePhotoUpload = () => {
     (imageId: string) => {
       if (!product) return;
 
-      setProduct((prev) =>
-        prev
+      setProduct((currentProduct) =>
+        currentProduct
           ? {
-              ...prev,
-              images: prev.images.filter((img) => img.id !== imageId),
+              ...currentProduct,
+              images: currentProduct.images.filter((img) => img.id !== imageId),
             }
           : null
       );
@@ -73,19 +73,23 @@ export const usePhotoUpload = () => {
     [product]
   );
 
+
+
   const handleCapturePhoto = useCallback(
     async (targetProduct?: Product) => {
+
       const productToUse = targetProduct || product;
  
-
       try {
         setError(null);
         const image = await capturePhoto(
+          // onLoadingStart callback
           (count) => {
             // This callback is triggered before the camera launches
             setIsLoadingImages(true);
             setLoadingImageCount(count);
           },
+          // onLoadingEnd callback 
           () => {
             // This callback is triggered when processing is complete
             setIsLoadingImages(false);
@@ -96,7 +100,7 @@ export const usePhotoUpload = () => {
         if (image && productToUse) {
           // If we have a specific product (passed as parameter), update it directly
           if (targetProduct) {
-            setProduct((prev) => {
+            setProduct(() => {
               // Always update to the targetProduct with the new image
               const newProduct = {
                 ...targetProduct,
@@ -116,11 +120,11 @@ export const usePhotoUpload = () => {
         setIsLoadingImages(false);
         setLoadingImageCount(0);
       }
-      // Note: finally block removed since onLoadingEnd callback handles cleanup
     },
     [product, addImages]
   );
 
+  // Select from Photo Library
   const handleSelectFromLibrary = useCallback(async (targetProduct?: Product) => {
     const productToUse = targetProduct || product;
 
@@ -129,11 +133,13 @@ export const usePhotoUpload = () => {
       // selectFromLibrary takes a callback as param
       // state is handled by usePhotoUpload custom hook
       const images = await selectFromLibrary(
+        // onLoadingStart callback
         (count) => {
           // This callback is triggered before the library picker launches
           setIsLoadingImages(true);
           setLoadingImageCount(count);
         },
+        // onLoadingEnd callback
         () => {
           // This callback is triggered when processing is complete
           setIsLoadingImages(false);
@@ -144,7 +150,7 @@ export const usePhotoUpload = () => {
       if (images.length > 0 && productToUse) {
         // If we have a specific product (passed as parameter), update it directly
         if (targetProduct) {
-          setProduct((prev) => {
+          setProduct(() => {
             // Always update to the targetProduct with the new images
             const newProduct = {
               ...targetProduct,
@@ -161,6 +167,7 @@ export const usePhotoUpload = () => {
       }
     } catch (err) {
       console.error('🟢 HOOK - Error in handleSelectFromLibrary:', err);
+
       setError(err instanceof Error ? err.message : 'Failed to select photos');
       setIsLoadingImages(false);
       setLoadingImageCount(0);
@@ -168,12 +175,16 @@ export const usePhotoUpload = () => {
     // Note: finally block removed since onLoadingEnd callback handles cleanup
   }, [product, addImages]);
 
+
+
   const handlePollingUpdate = useCallback((payload: PollingPayload) => {
-    setProduct((prev) => {
-      if (!prev || prev.id !== payload.productId) return prev;
+    setProduct((currentProduct) => {
+      // Fail safely is product is null
+      // Or product ID doesn't match the ID sent by the backend
+      if (!currentProduct || currentProduct.id !== payload.productId) return currentProduct;
 
       return {
-        ...prev,
+        ...currentProduct,
         status: payload.status, // Use the status directly from backend
         mercadoLibreUrl: payload.product?.mercado_libre_listing?.permalink,
         errorMessage: payload.status === 'failed' ? payload.message : undefined,
@@ -188,7 +199,7 @@ export const usePhotoUpload = () => {
 
     setIsUploading(true);
     setError(null);
-    setProduct((prev) => (prev ? { ...prev, status: 'uploading' } : null));
+    setProduct((currentProduct) => (currentProduct ? { ...currentProduct, status: 'uploading' } : null));
 
     try {
       let results;
@@ -201,8 +212,8 @@ export const usePhotoUpload = () => {
           (progress: number) => {
             const imageId = product.images[0]?.id;
             if (imageId) {
-              setUploadProgress((prev) => ({
-                ...prev,
+              setUploadProgress((currentProgress) => ({
+                ...currentProgress,
                 [imageId]: progress,
               }));
             }
@@ -219,8 +230,8 @@ export const usePhotoUpload = () => {
             onProgress: (imageIndex: number, progress: number) => {
               const imageId = product.images[imageIndex]?.id;
               if (imageId) {
-                setUploadProgress((prev) => ({
-                  ...prev,
+                setUploadProgress((currentProgress) => ({
+                  ...currentProgress,
                   [imageId]: progress,
                 }));
               }
@@ -234,11 +245,11 @@ export const usePhotoUpload = () => {
       if (hasErrors) {
         const errorCount = results.filter((r: any) => !r.success).length;
         setError(`${errorCount} out of ${results.length} images failed to upload`);
-        setProduct((prev) => (prev ? { ...prev, status: 'failed' } : null));
+        setProduct((currentProduct) => (currentProduct ? { ...currentProduct, status: 'failed' } : null));
         return;
       }
 
-      setProduct((prev) => (prev ? { ...prev, status: 'processing' } : null));
+      setProduct((currentProduct) => (currentProduct ? { ...currentProduct, status: 'processing' } : null));
 
 
       // Wait 10 seconds before starting to poll, giving backend time to process
@@ -249,7 +260,7 @@ export const usePhotoUpload = () => {
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
-      setProduct((prev) => (prev ? { ...prev, status: 'failed' } : null));
+      setProduct((currentProduct) => (currentProduct ? { ...currentProduct, status: 'failed' } : null));
     } finally {
       setIsUploading(false);
     }
