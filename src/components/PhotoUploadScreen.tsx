@@ -4,7 +4,6 @@ import { usePhotoUpload } from '@/hooks/usePhotoUpload';
 import { Container } from './Container';
 import {
   Header,
-  ErrorMessage,
   PhotoActions,
   ImageGrid,
   UploadButton,
@@ -20,7 +19,6 @@ export const PhotoUploadScreen: React.FC = () => {
     isLoadingImages,
     loadingImageCount,
     uploadProgress,
-    error,
     createNewProduct,
     capturePhoto,
     selectFromLibrary,
@@ -103,8 +101,6 @@ export const PhotoUploadScreen: React.FC = () => {
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
           <View className="flex-1 p-6">
             <Header />
-
-            {error && <ErrorMessage error={error} />}
 
             {(!product || product.status === 'pending') && (
               <PhotoActions

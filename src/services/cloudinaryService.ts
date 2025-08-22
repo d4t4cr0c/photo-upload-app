@@ -143,8 +143,17 @@ export const uploadImageWithWebhook = async (
 ): Promise<UploadResult> => {
   const result = await uploadImage(image, productId, onProgress);
   
-  // Send webhook notification
-  await notifyBackendUploadComplete(productId, [result], result.success);
+  // Send webhook notification - productStatusService handles failures internally
+  const webhookResult = await notifyBackendUploadComplete(productId, [result], result.success);
+  
+  // If webhook failed, reflect that in the upload result
+  if (!webhookResult.success) {
+    return {
+      ...result,
+      success: false,
+      error: webhookResult.error || 'Backend notification failed'
+    };
+  }
   
   return result;
 };
@@ -156,12 +165,23 @@ export const uploadMultipleImagesBulkWithWebhook = async (
 ): Promise<UploadResult[]> => {
   const results = await uploadMultipleImagesBulk(images, productId, options);
   
-  // Send webhook notification
+  // Send webhook notification - productStatusService handles failures internally
   const success = results.every(r => r.success);
-  await notifyBackendUploadComplete(productId, results, success);
+  const webhookResult = await notifyBackendUploadComplete(productId, results, success);
+  
+  // If webhook failed, mark all uploads as failed to trigger proper error handling
+  if (!webhookResult.success) {
+    return results.map(result => ({
+      ...result,
+      success: false,
+      error: webhookResult.error || 'Backend notification failed'
+    }));
+  }
   
   return results;
 };
+
+
 
 export const createProductFolder = async (productId: string): Promise<boolean> => {
   // Folders are created automatically when uploading images to Cloudinary

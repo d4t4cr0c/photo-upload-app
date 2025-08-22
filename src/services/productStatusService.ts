@@ -34,11 +34,32 @@ export const notifyBackendUploadComplete = async (
 
     if (response.ok) {
       console.log(`🔵 WEBHOOK - Upload notification sent successfully for product ${productId}`);
+      return { success: true };
     } else {
       throw new Error(`Upload notification failed for product ${productId}: ${response.status}`);
     }
   } catch (error) {
     console.error(`🔵 WEBHOOK - Upload notification error for product ${productId}:`, error);
+    
+    // Handle webhook failure internally - notify listeners that the product failed
+    const failedPayload: PollingPayload = {
+      productId,
+      status: 'failed',
+      message: `Backend notification failed: ${error instanceof Error ? error.message : 'Unknown error'}. Images were uploaded but backend was not notified.`,
+    };
+    
+    // Notify any active listeners about the failure
+    const callback = listeners.get(productId);
+    if (callback) {
+      callback(failedPayload);
+      // Clean up polling since the process has failed
+      unsubscribeFromProduct(productId);
+    }
+    
+    return { 
+      success: false, 
+      error: failedPayload.message 
+    };
   }
 };
 
@@ -125,7 +146,7 @@ const checkProductStatus = async (
       status: 'failed',
       message: `Error checking status: ${error instanceof Error ? error.message : 'Unknown error'}`,
     };
-    
+
     pollingUpdateCallback(errorPayload);
     unsubscribeFromProduct(productId);
   }

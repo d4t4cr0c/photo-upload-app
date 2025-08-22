@@ -29,8 +29,8 @@ export const capturePhoto = async (onLoadingStart?: (count: number) => void, onL
     // Call loading callback before launching camera
     // to show at least one skeleton
     // Otherwise app looks freezed
-    // Skeleton is shown after photo is taken
-    onLoadingStart?.(1);
+    // (but skeleton may be shown before opening camera)
+    //onLoadingStart?.(1);
 
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ['images'],
@@ -63,6 +63,8 @@ export const capturePhoto = async (onLoadingStart?: (count: number) => void, onL
   }
 };
 
+
+// Select images from Photo Library
 export const selectFromLibrary = async (onLoadingStart?: (count: number) => void, onLoadingEnd?: () => void): Promise<ProductImage[]> => {
   try {
     const hasPermissions = await requestPermissions();
@@ -73,9 +75,8 @@ export const selectFromLibrary = async (onLoadingStart?: (count: number) => void
     // Call loading callback before launching library picker
     // to show at least 1 skeleton.
     // Otherwise app looks freezed
-    // Skeleton is shown after photos are selected
-
-    onLoadingStart?.(1); // Use 1 as placeholder to show at least one skeleton
+    // (but skeleton may be shown before opening library picker)
+    //onLoadingStart?.(1); // Use 1 as placeholder to show at least one skeleton
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],

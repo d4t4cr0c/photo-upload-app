@@ -18,7 +18,7 @@ export const usePhotoUpload = () => {
   const [isLoadingImages, setIsLoadingImages] = useState(false);
   const [loadingImageCount, setLoadingImageCount] = useState(0);
   const [uploadProgress, setUploadProgress] = useState<{ [imageId: string]: number }>({});
-  const [error, setError] = useState<string | null>(null);
+
 
   const createNewProduct = useCallback(() => {
     const newProduct: Product = {
@@ -29,7 +29,6 @@ export const usePhotoUpload = () => {
     };
 
     setProduct(newProduct);
-    setError(null);
     return newProduct;
   }, []);
 
@@ -81,7 +80,6 @@ export const usePhotoUpload = () => {
       const productToUse = targetProduct || product;
  
       try {
-        setError(null);
         const image = await capturePhoto(
           // onLoadingStart callback
           (count) => {
@@ -116,7 +114,6 @@ export const usePhotoUpload = () => {
         }
       } catch (err) {
         console.error('🟡 HOOK - Error in handleCapturePhoto:', err);
-        setError(err instanceof Error ? err.message : 'Failed to capture photo');
         setIsLoadingImages(false);
         setLoadingImageCount(0);
       }
@@ -129,7 +126,6 @@ export const usePhotoUpload = () => {
     const productToUse = targetProduct || product;
 
     try {
-      setError(null);
       // selectFromLibrary takes a callback as param
       // state is handled by usePhotoUpload custom hook
       const images = await selectFromLibrary(
@@ -168,7 +164,7 @@ export const usePhotoUpload = () => {
     } catch (err) {
       console.error('🟢 HOOK - Error in handleSelectFromLibrary:', err);
 
-      setError(err instanceof Error ? err.message : 'Failed to select photos');
+      (err instanceof Error ? err.message : 'Failed to select photos');
       setIsLoadingImages(false);
       setLoadingImageCount(0);
     }
@@ -198,7 +194,6 @@ export const usePhotoUpload = () => {
     if (!product || product.images.length === 0) return;
 
     setIsUploading(true);
-    setError(null);
     setProduct((currentProduct) => (currentProduct ? { ...currentProduct, status: 'uploading' } : null));
 
     try {
@@ -243,8 +238,6 @@ export const usePhotoUpload = () => {
       const hasErrors = results.some((result: any) => !result.success);
 
       if (hasErrors) {
-        const errorCount = results.filter((r: any) => !r.success).length;
-        setError(`${errorCount} out of ${results.length} images failed to upload`);
         setProduct((currentProduct) => (currentProduct ? { ...currentProduct, status: 'failed' } : null));
         return;
       }
@@ -259,7 +252,6 @@ export const usePhotoUpload = () => {
 
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed');
       setProduct((currentProduct) => (currentProduct ? { ...currentProduct, status: 'failed' } : null));
     } finally {
       setIsUploading(false);
@@ -275,7 +267,6 @@ export const usePhotoUpload = () => {
     setIsLoadingImages(false);
     setLoadingImageCount(0);
     setUploadProgress({});
-    setError(null);
   }, [product]);
 
   return {
@@ -284,7 +275,6 @@ export const usePhotoUpload = () => {
     isLoadingImages,
     loadingImageCount,
     uploadProgress,
-    error,
     createNewProduct,
     addImages,
     removeImage,
