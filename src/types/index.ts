@@ -22,9 +22,9 @@ export interface CloudinaryConfig {
   folder: string;
 }
 
-export interface WebhookPayload {
+export interface PollingPayload {
   productId: string;
-  status: 'success' | 'failed';
+  status: 'processing' | 'completed' | 'failed';
   message?: string;
   product?: {
     mercado_libre_listing?: {

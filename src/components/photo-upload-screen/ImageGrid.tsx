@@ -62,7 +62,7 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
       ))}
       
       {/* Show loading skeletons when processing images */}
-      {isLoadingImages && Array.from({ length: loadingImageCount }, (_, index) => (
+      {isLoadingImages && [...Array(loadingImageCount)].map((_, index) => (
         <View key={`skeleton-${index}`} className="relative mb-4 w-[48%]">
           <View className="h-60 w-full rounded-2xl bg-gray-700/50 items-center justify-center">
             <ActivityIndicator size="large" color="#93C5FD" />

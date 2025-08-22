@@ -20,15 +20,29 @@ export const StatusMessage: React.FC<StatusMessageProps> = ({ product }) => {
   
   useEffect(() => {
     
-    // Create a continuous rotation animation
-    const animation = Animated.loop(
-      Animated.timing(rotationValue, {
-        toValue: 1,
-        duration: 2000,
-        useNativeDriver: true,
-      })
-    );
+    // Create a sequence animation with pauses
+    const createAnimation = () => {
+      return Animated.sequence([
+        // Rotate 180 degrees
+        Animated.timing(rotationValue, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        // Pause for half a second
+        Animated.delay(500),
+        // Rotate another 180 degrees (back to start)
+        Animated.timing(rotationValue, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        // Pause for half a second
+        Animated.delay(500),
+      ]);
+    };
 
+    const animation = Animated.loop(createAnimation());
     animation.start();
     
 
@@ -48,7 +62,7 @@ export const StatusMessage: React.FC<StatusMessageProps> = ({ product }) => {
   if (!product || product.status === 'pending') {
     return null;
   }
-  
+
   // Access object properties dynamically
   const currentStatus = statusInfo[product.status];
 
@@ -59,9 +73,7 @@ export const StatusMessage: React.FC<StatusMessageProps> = ({ product }) => {
         {currentStatus.text}
       </Text>
       
-      {product.status === 'processing' 
-        || product.status === 'uploading'
-        && (
+      {(product.status === 'processing' || product.status === 'uploading') && (
         <View className="mt-4 items-center">
           <Animated.Text 
             className="text-3xl"

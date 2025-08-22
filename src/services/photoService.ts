@@ -17,7 +17,7 @@ export const requestPermissions = async (): Promise<boolean> => {
   return hasPermissions;
 };
 
-export const capturePhoto = async (onLoadingStart?: (count: number) => void): Promise<ProductImage | null> => {
+export const capturePhoto = async (onLoadingStart?: (count: number) => void, onLoadingEnd?: () => void): Promise<ProductImage | null> => {
 
   try {
     const hasPermissions = await requestPermissions();
@@ -26,6 +26,9 @@ export const capturePhoto = async (onLoadingStart?: (count: number) => void): Pr
       throw new Error('Camera permissions are required to capture photos');
     }
 
+    // Call loading callback before launching camera
+    onLoadingStart?.(1);
+
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ['images'],
       allowsEditing: false,
@@ -33,13 +36,11 @@ export const capturePhoto = async (onLoadingStart?: (count: number) => void): Pr
     });
 
     if (result.canceled || !result.assets[0]) {
+      onLoadingEnd?.();
       return null;
     }
 
     const asset = result.assets[0];
-
-    // Call loading callback right before image processing begins
-    onLoadingStart?.(1); // Always 1 image from camera
 
     const resizedImage = await resizeImage(asset.uri);
 
@@ -50,47 +51,62 @@ export const capturePhoto = async (onLoadingStart?: (count: number) => void): Pr
       uploaded: false,
     };
 
+    onLoadingEnd?.();
     return productImage;
   } catch (error) {
     console.error('❌ Error in capturePhoto:', error);
+    onLoadingEnd?.();
     throw error;
   }
 };
 
-export const selectFromLibrary = async (onLoadingStart?: (count: number) => void): Promise<ProductImage[]> => {
-  const hasPermissions = await requestPermissions();
-  if (!hasPermissions) {
-    throw new Error('Media library permissions are required to select photos');
+export const selectFromLibrary = async (onLoadingStart?: (count: number) => void, onLoadingEnd?: () => void): Promise<ProductImage[]> => {
+  try {
+    const hasPermissions = await requestPermissions();
+    if (!hasPermissions) {
+      throw new Error('Media library permissions are required to select photos');
+    }
+
+    // Call loading callback before launching library picker
+    console.log('loading starts')
+    onLoadingStart?.(1); // Use 1 as placeholder to show at least one skeleton
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsMultipleSelection: true,
+      allowsEditing: false,
+      quality: 0.8,
+      selectionLimit: 10,
+    });
+
+    if (result.canceled || !result.assets) {
+      onLoadingEnd?.();
+      return [];
+    }
+
+    // Update loading count now that we know how many images were selected
+    console.log('loading updates')
+    onLoadingStart?.(result.assets.length);
+
+    const resizedImages = await Promise.all(
+      result.assets.map(async (asset) => {
+        const resizedImage = await resizeImage(asset.uri);
+        return {
+          id: generateId(),
+          uri: resizedImage.uri,
+          filename: `product_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.jpg`,
+          uploaded: false,
+        };
+      })
+    );
+
+    console.log('loading ends')
+    onLoadingEnd?.();
+    return resizedImages;
+  } catch (error) {
+    onLoadingEnd?.();
+    throw error;
   }
-
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ['images'],
-    allowsMultipleSelection: true,
-    allowsEditing: false,
-    quality: 0.8,
-    selectionLimit: 10,
-  });
-
-  if (result.canceled || !result.assets) {
-    return [];
-  }
-
-  // Call loading callback right before image processing begins
-  onLoadingStart?.(result.assets.length);
-
-  const resizedImages = await Promise.all(
-    result.assets.map(async (asset) => {
-      const resizedImage = await resizeImage(asset.uri);
-      return {
-        id: generateId(),
-        uri: resizedImage.uri,
-        filename: `product_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.jpg`,
-        uploaded: false,
-      };
-    })
-  );
-
-  return resizedImages;
 };
 
 const resizeImage = async (uri: string): Promise<ImageResult> => {

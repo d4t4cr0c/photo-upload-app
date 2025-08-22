@@ -1,11 +1,11 @@
-import { WebhookPayload } from '@/types';
+import { PollingPayload } from '@/types';
 import { ENV } from '@/config/env';
 
 // Module-level state
-const listeners = new Map<string, (payload: WebhookPayload) => void>();
+const listeners = new Map<string, (payload: PollingPayload) => void>();
 const intervals = new Map<string, NodeJS.Timeout>();
 
-// Notify backend when images upload is complete
+// Notify backend when images upload is complete (webhook)
 export const notifyBackendUploadComplete = async (
   productId: string,
   results: any[],
@@ -44,7 +44,7 @@ export const notifyBackendUploadComplete = async (
 
 export const subscribeToProduct = (
   productId: string,
-  callback: (payload: WebhookPayload) => void
+  callback: (payload: PollingPayload) => void
 ) => {
   console.log(`🔵 POLLING - Starting continuous polling for product ${productId} (every 5 seconds)`);
   listeners.set(productId, callback);
@@ -72,94 +72,52 @@ export const unsubscribeFromProduct = (productId: string) => {
   listeners.delete(productId);
 };
 
+
+
+
+// POLL backend every 5 seconds to check product listing status
 const checkProductStatus = async (
   productId: string,
-  callback: (payload: WebhookPayload) => void
+  callback: (payload: PollingPayload) => void
 ) => {
   try {
     const response = await fetch(`${ENV.BACKEND_API_URL}/webhook/${productId}/status`);
 
     if (response.ok) {
+
       const data = await response.json();
 
+      const webhookPayload: PollingPayload = {
+        productId,
+        status: data.status,
+        message: data.message,
+        product: data.product,
+      };
+
+      callback(webhookPayload);
+
+      // Only stop polling when processing is actually finished
       if (data.status === 'completed' || data.status === 'failed') {
         console.log(`🔵 POLLING - Product ${productId} status: ${data.status} - stopping polling`);
-        const webhookPayload: WebhookPayload = {
-          productId,
-          status: data.status === 'completed' ? 'success' : 'failed',
-          message: data.message,
-          product: data.product,
-        };
-
-        callback(webhookPayload);
         unsubscribeFromProduct(productId);
       } else {
         console.log(`🔵 POLLING - Product ${productId} status: ${data.status} - continuing polling`);
       }
+
     } else {
-      // Show error if API request fails
-      const errorPayload: WebhookPayload = {
-        productId,
-        status: 'failed',
-        message: `Failed to check product status: ${response.status} ${response.statusText}`,
-      };
-      callback(errorPayload);
-      unsubscribeFromProduct(productId);
+      // Throw error for non-2xx status codes, will be caught below
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
   } catch (error) {
-    console.error(`Error checking status for product ${productId}:`, error);
+    console.error(`🔵 POLLING - Error checking status for product ${productId}:`, error);
     
-    // Show error if request fails
-    const errorPayload: WebhookPayload = {
+    // Handle all errors (network issues, HTTP errors, JSON parsing errors, etc.)
+    const errorPayload: PollingPayload = {
       productId,
       status: 'failed',
-      message: `Network error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      message: `Error checking status: ${error instanceof Error ? error.message : 'Unknown error'}`,
     };
     callback(errorPayload);
     unsubscribeFromProduct(productId);
   }
-};
-
-
-
-
-
-export const simulateWebhook = async (
-  productId: string,
-  success: boolean = true,
-  permalink?: string
-) => {
-  const callback = listeners.get(productId);
-  if (!callback) return;
-
-  const payload: WebhookPayload = {
-    productId,
-    status: success ? 'success' : 'failed',
-    message: success ? 'Listing created successfully' : 'Failed to create listing',
-    product:
-      success && permalink
-        ? {
-            mercado_libre_listing: {
-              permalink,
-            },
-          }
-        : undefined,
-  };
-
-  setTimeout(() => {
-    callback(payload);
-    unsubscribeFromProduct(productId);
-  }, 3000);
-};
-
-export const processIncomingWebhook = (payload: WebhookPayload) => {
-  const callback = listeners.get(payload.productId);
-  if (callback) {
-    callback(payload);
-    unsubscribeFromProduct(payload.productId);
-  }
-};
-
-export const clearAllListeners = () => {
-  listeners.clear();
 };

@@ -1,11 +1,10 @@
 import { useState, useCallback } from 'react';
-import { Product, ProductImage, WebhookPayload } from '@/types';
+import { Product, ProductImage, PollingPayload } from '@/types';
 import { capturePhoto, selectFromLibrary } from '@/services/photoService';
 import { uploadImageWithWebhook, uploadMultipleImagesBulkWithWebhook } from '@/services/cloudinaryService';
 import {
   subscribeToProduct,
   unsubscribeFromProduct,
-  simulateWebhook,
 } from '@/services/webhookService';
 
 // Simple UUID alternative for React Native
@@ -81,11 +80,18 @@ export const usePhotoUpload = () => {
 
       try {
         setError(null);
-        const image = await capturePhoto((count) => {
-          // This callback is triggered after the camera picker returns with an image
-          setIsLoadingImages(true);
-          setLoadingImageCount(count);
-        });
+        const image = await capturePhoto(
+          (count) => {
+            // This callback is triggered before the camera launches
+            setIsLoadingImages(true);
+            setLoadingImageCount(count);
+          },
+          () => {
+            // This callback is triggered when processing is complete
+            setIsLoadingImages(false);
+            setLoadingImageCount(0);
+          }
+        );
 
         if (image && productToUse) {
           // If we have a specific product (passed as parameter), update it directly
@@ -107,10 +113,10 @@ export const usePhotoUpload = () => {
       } catch (err) {
         console.error('🟡 HOOK - Error in handleCapturePhoto:', err);
         setError(err instanceof Error ? err.message : 'Failed to capture photo');
-      } finally {
         setIsLoadingImages(false);
         setLoadingImageCount(0);
       }
+      // Note: finally block removed since onLoadingEnd callback handles cleanup
     },
     [product, addImages]
   );
@@ -122,11 +128,18 @@ export const usePhotoUpload = () => {
       setError(null);
       // selectFromLibrary takes a callback as param
       // state is handled by usePhotoUpload custom hook
-      const images = await selectFromLibrary((count) => {
-        // This callback is triggered after the image library picker returns with images
-        setIsLoadingImages(true);
-        setLoadingImageCount(count);
-      });
+      const images = await selectFromLibrary(
+        (count) => {
+          // This callback is triggered before the library picker launches
+          setIsLoadingImages(true);
+          setLoadingImageCount(count);
+        },
+        () => {
+          // This callback is triggered when processing is complete
+          setIsLoadingImages(false);
+          setLoadingImageCount(0);
+        }
+      );
 
       if (images.length > 0 && productToUse) {
         // If we have a specific product (passed as parameter), update it directly
@@ -149,19 +162,19 @@ export const usePhotoUpload = () => {
     } catch (err) {
       console.error('🟢 HOOK - Error in handleSelectFromLibrary:', err);
       setError(err instanceof Error ? err.message : 'Failed to select photos');
-    } finally {
       setIsLoadingImages(false);
       setLoadingImageCount(0);
     }
+    // Note: finally block removed since onLoadingEnd callback handles cleanup
   }, [product, addImages]);
 
-  const handleWebhookUpdate = useCallback((payload: WebhookPayload) => {
+  const handlePollingUpdate = useCallback((payload: PollingPayload) => {
     setProduct((prev) => {
       if (!prev || prev.id !== payload.productId) return prev;
 
       return {
         ...prev,
-        status: payload.status === 'success' ? 'completed' : 'failed',
+        status: payload.status, // Use the status directly from backend
         mercadoLibreUrl: payload.product?.mercado_libre_listing?.permalink,
         errorMessage: payload.status === 'failed' ? payload.message : undefined,
       };
@@ -225,16 +238,10 @@ export const usePhotoUpload = () => {
 
       setProduct((prev) => (prev ? { ...prev, status: 'processing' } : null));
 
-      // Wait 20 seconds before starting to poll, giving backend time to process
+      // Wait 10 seconds before starting to poll, giving backend time to process
       setTimeout(() => {
-        subscribeToProduct(product.id, handleWebhookUpdate);
-      }, 20000);
-
-      simulateWebhook(
-        product.id,
-        true,
-        'https://articulo.mercadolibre.com.ar/MLA-123456789-producto-ejemplo'
-      );
+        subscribeToProduct(product.id, handlePollingUpdate);
+      }, 10000);
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
@@ -242,7 +249,7 @@ export const usePhotoUpload = () => {
     } finally {
       setIsUploading(false);
     }
-  }, [product, handleWebhookUpdate]);
+  }, [product, handlePollingUpdate]);
 
   const reset = useCallback(() => {
     if (product) {
