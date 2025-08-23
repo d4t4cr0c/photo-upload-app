@@ -1,4 +1,5 @@
 import { PhotoUploadScreen } from '@/components/PhotoUploadScreen';
+import { StyleTestScreen } from '@/components/StyleTestScreen';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from '@/hooks/useFonts';
 import { ActivityIndicator, View } from 'react-native';

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Text, TouchableOpacity } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Product } from '@/types';
 
 interface ResetButtonProps {
@@ -14,13 +15,18 @@ export const ResetButton: React.FC<ResetButtonProps> = ({ product, onReset }) =>
     return null;
   }
 
+  const buttonText = product.status === 'failed' ? 'Intentar nuevamente' : 'Cargar nuevo producto';
+
   return (
     <TouchableOpacity
-      className="items-center rounded-2xl border border-blue-400/30 bg-green-950 px-8 py-6 shadow-lg"
+      className="rounded-2xl border border-gray-400/30 bg-green-500/20 px-6 py-6"
       onPress={onReset}>
-      <Text className="text-lg font-bold text-blue-100">
-        Cargar nuevo producto ↩️
-      </Text>
+      <View className="flex-row items-center justify-center">
+        <Ionicons name="refresh-outline" size={24} color="#9ca3af" />
+        <Text className="ml-2 text-xl font-black text-green-300">
+          {buttonText}
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 };

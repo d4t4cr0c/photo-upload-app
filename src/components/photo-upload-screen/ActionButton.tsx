@@ -23,7 +23,7 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
       onPress={onPress}
       disabled={disabled}>
       <Ionicons name={icon} size={72} color="white" className="mb-1" />
-      <Text className="mt-3 text-sm font-bold text-white text-center">
+      <Text className="mt-3 text-base font-bold text-white text-center">
         {text}
       </Text>
     </TouchableOpacity>

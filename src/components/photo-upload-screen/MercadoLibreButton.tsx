@@ -1,5 +1,6 @@
 import React from 'react';
-import { Text, TouchableOpacity, Alert, Linking } from 'react-native';
+import { Text, TouchableOpacity, Alert, Linking, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Product } from '@/types';
 
 interface MercadoLibreButtonProps {
@@ -39,11 +40,14 @@ export const MercadoLibreButton: React.FC<MercadoLibreButtonProps> = ({ product 
 
   return (
     <TouchableOpacity
-      className="mb-6 rounded-2xl border border-blue-400/30 bg-blue-500/20 px-5 py-6"
+      className="mb-6 rounded-2xl bg-yellow-400 px-6 py-6 shadow-2xl border border-yellow-500/30"
       onPress={handleOpenUrl}>
-      <Text className="text-center text-lg font-bold text-blue-300">
-        Ver publicación 👀
-      </Text>
+      <View className="flex-row items-center justify-center">
+        <Ionicons name="open-outline" size={24} color="#000" />
+        <Text className="ml-2 text-xl font-black text-black">
+          Ver en Mercado Libre
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 };
