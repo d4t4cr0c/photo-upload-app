@@ -2,10 +2,46 @@ import { ProductImage, UploadResult, BulkUploadOptions } from '@/types';
 import { ENV } from '@/config/env';
 import { notifyBackendUploadComplete } from '@/services/productStatusService';
 
-export const uploadImage = async (
+
+export async function uploadImagesWithWebhook(
+  images: ProductImage | ProductImage[],
+  productId: string,
+  options: BulkUploadOptions = {}
+): Promise<UploadResult[]> {
+  const imageArray = Array.isArray(images) ? images : [images];
+
+  let results: UploadResult[];
+
+  if (imageArray.length === 1) {
+    // Single image upload
+    const result = await uploadImage(imageArray[0], productId);
+    results = [result];
+  } else {
+    // Multiple image upload
+    results = await uploadMultipleImagesBulk(imageArray, productId, options);
+  }
+
+  // Send webhook notification - productStatusService handles failures internally
+  const success = results.every((r) => r.success);
+  const webhookResult = await notifyBackendUploadComplete(productId, results, success);
+
+  // If webhook failed, mark all uploads as failed to trigger proper error handling
+  if (!webhookResult.success) {
+    return results.map((result) => ({
+      ...result,
+      success: false,
+      error: webhookResult.error || 'Backend notification failed',
+    }));
+  }
+
+  return results;
+};
+
+
+export async function uploadImage(
   image: ProductImage,
   productId: string
-): Promise<UploadResult> => {
+): Promise<UploadResult> {
   try {
     // Validate environment configuration
     if (!ENV.CLOUDINARY_CLOUD_NAME || !ENV.CLOUDINARY_UPLOAD_PRESET) {
@@ -64,11 +100,11 @@ export const uploadImage = async (
   }
 };
 
-export const uploadMultipleImagesBulk = async (
+export async function uploadMultipleImagesBulk(
   images: ProductImage[],
   productId: string,
   options: BulkUploadOptions = {}
-): Promise<UploadResult[]> => {
+): Promise<UploadResult[]> {
   const { maxConcurrent = 10, onImageComplete } = options;
 
   if (images.length === 0) {
@@ -124,36 +160,3 @@ export const uploadMultipleImagesBulk = async (
   return results;
 };
 
-export const uploadImagesWithWebhook = async (
-  images: ProductImage | ProductImage[],
-  productId: string,
-  options: BulkUploadOptions = {}
-): Promise<UploadResult[]> => {
-  const imageArray = Array.isArray(images) ? images : [images];
-
-  let results: UploadResult[];
-
-  if (imageArray.length === 1) {
-    // Single image upload
-    const result = await uploadImage(imageArray[0], productId);
-    results = [result];
-  } else {
-    // Multiple image upload
-    results = await uploadMultipleImagesBulk(imageArray, productId, options);
-  }
-
-  // Send webhook notification - productStatusService handles failures internally
-  const success = results.every((r) => r.success);
-  const webhookResult = await notifyBackendUploadComplete(productId, results, success);
-
-  // If webhook failed, mark all uploads as failed to trigger proper error handling
-  if (!webhookResult.success) {
-    return results.map((result) => ({
-      ...result,
-      success: false,
-      error: webhookResult.error || 'Backend notification failed',
-    }));
-  }
-
-  return results;
-};
