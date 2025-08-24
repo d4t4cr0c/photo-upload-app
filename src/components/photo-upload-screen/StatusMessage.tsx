@@ -9,20 +9,28 @@ interface StatusMessageProps {
 
 const statusInfo = {
   uploading: {
-    text: 'Cargando imágenes',
+    text: 'Cargando imágenes...',
     color: 'text-blue-400/90',
     bgColor: 'bg-blue-500/10',
     borderColor: 'border-blue-400/20',
     icon: 'cloud-upload-outline' as const,
-    iconColor: '#60a5fa',
+    iconColor: '#51a2ff',
+  },
+  waiting: {
+    text: 'Procesando imágenes...',
+    color: 'text-green-400/90',
+    bgColor: 'bg-green-500/10',
+    borderColor: 'border-green-400/20',
+    icon: 'hourglass-outline' as const,
+    iconColor: '#05df72',
   },
   processing: {
-    text: 'Procesando imágenes...',
+    text: 'Creando publicación...',
     color: 'text-yellow-400/90',
     bgColor: 'bg-yellow-500/10',
     borderColor: 'border-yellow-400/20',
     icon: 'hourglass-outline' as const,
-    iconColor: '#facc15',
+    iconColor: '#fdc700',
   },
   completed: {
     text: '¡Publicación creada!',
@@ -95,13 +103,18 @@ export const StatusMessage: React.FC<StatusMessageProps> = ({ product }) => {
     <View
       className={`mb-6 rounded-xl border ${currentStatus.borderColor} ${currentStatus.bgColor} p-4`}>
       <View className="flex-row items-center justify-center">
-        {product.status === 'processing' || product.status === 'uploading' ? (
-          <Animated.View style={{ transform: [{ rotate: rotation }] }}>
-            <Ionicons name="hourglass-outline" size={30} color={currentStatus.iconColor} />
-          </Animated.View>
-        ) : (
-          <Ionicons name={currentStatus.icon} size={30} color={currentStatus.iconColor} />
-        )}
+        {
+          product.status === 'processing' 
+          || product.status === 'uploading' 
+          || product.status === 'waiting' 
+          ? (
+              <Animated.View style={{ transform: [{ rotate: rotation }] }}>
+                <Ionicons name="hourglass-outline" size={30} color={currentStatus.iconColor} />
+              </Animated.View>
+            ) : (
+              <Ionicons name={currentStatus.icon} size={30} color={currentStatus.iconColor} />
+            )
+        }
 
         <Text className={`ml-2 text-xl font-medium ${currentStatus.color}`}>
           {currentStatus.text}

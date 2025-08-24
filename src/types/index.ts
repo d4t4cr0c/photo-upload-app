@@ -9,7 +9,7 @@ export interface ProductImage {
 export interface Product {
   id: string;
   images: ProductImage[];
-  status: 'pending' | 'uploading' | 'processing' | 'completed' | 'failed';
+  status: 'pending' | 'uploading' | 'processing' | 'waiting' | 'completed' | 'failed';
   createdAt: Date;
   mercadoLibreUrl?: string;
   errorMessage?: string;

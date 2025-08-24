@@ -194,14 +194,16 @@ export const usePhotoUpload = () => {
         return;
       }
 
+      // Set to 'waiting' to show appropriate message to user while waiting
       setProduct((currentProduct) =>
-        currentProduct ? { ...currentProduct, status: 'processing' } : null
+        currentProduct ? { ...currentProduct, status: 'waiting' } : null
       );
 
       // Wait 10 seconds before starting to poll, giving backend time to process
       setTimeout(() => {
         subscribeToProduct(product.id, handlePollingUpdate);
       }, 10000);
+
     } catch (err) {
       console.error('🔴 HOOK - Error in uploadImages:', err);
       setErrorMsg('Error al cargar fotos. Intente nuevamente.');
