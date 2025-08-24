@@ -31,6 +31,8 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
     return null;
   }
 
+  const skeletons = [...Array(loadingImageCount)];
+
   return (
     <View className="mb-8 flex-row flex-wrap justify-between">
       {/* Show actual images */}
@@ -62,13 +64,14 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
       ))}
       
       {/* Show loading skeletons when processing images */}
-      {isLoadingImages && [...Array(loadingImageCount)].map((_, index) => (
+      {isLoadingImages && skeletons.map((item, index) => (
+        
         <View key={`skeleton-${index}`} className="relative mb-4 w-[48%]">
           <View className="h-60 w-full rounded-2xl bg-gray-700/50 items-center justify-center">
+
+            {/* Spinner */}
             <ActivityIndicator size="large" color="#93C5FD" />
-            <Text className="mt-3 text-sm font-semibold text-blue-300">
-              Procesando...
-            </Text>
+
           </View>
         </View>
       ))}
