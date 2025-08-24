@@ -2,10 +2,7 @@ import { useState, useCallback } from 'react';
 import { Product, ProductImage, PollingPayload } from '@/types';
 import { capturePhoto, selectFromLibrary } from '@/services/photoService';
 import { uploadImagesWithWebhook } from '@/services/cloudinaryService';
-import {
-  subscribeToProduct,
-  unsubscribeFromProduct,
-} from '@/services/productStatusService';
+import { subscribeToProduct, unsubscribeFromProduct } from '@/services/productStatusService';
 
 // Simple UUID alternative for React Native
 const generateId = () => {
@@ -18,9 +15,7 @@ export const usePhotoUpload = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isLoadingImages, setIsLoadingImages] = useState(false);
   const [loadingImageCount, setLoadingImageCount] = useState(0);
-  const [uploadProgress, setUploadProgress] = useState<{ [imageId: string]: number }>({});
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
 
   const createNewProduct = useCallback(() => {
     const newProduct: Product = {
@@ -34,7 +29,6 @@ export const usePhotoUpload = () => {
     return newProduct;
   }, []);
 
-
   const addImages = useCallback(
     (images: ProductImage[]) => {
       if (!product) {
@@ -47,7 +41,7 @@ export const usePhotoUpload = () => {
             ...currentProduct,
             images: [...currentProduct.images, ...images],
           };
-  
+
           return newProduct;
         }
         return null;
@@ -72,22 +66,20 @@ export const usePhotoUpload = () => {
     [product]
   );
 
-
   // TAKE PHOTO
   const handleCapturePhoto = useCallback(
     async (targetProduct?: Product) => {
-
       const productToUse = targetProduct || product;
- 
-      try {
 
+      try {
         const image = await capturePhoto(
           // Callback passed to show skeleton while processing: onStartProcessing
           () => {
             // Show loading state only when we start processing the image (after capture)
             setIsLoadingImages(true);
             setLoadingImageCount(1);
-          });
+          }
+        );
 
         if (image && productToUse) {
           // If we have a specific product (passed as parameter), update it directly
@@ -98,7 +90,7 @@ export const usePhotoUpload = () => {
                 ...targetProduct,
                 images: [...targetProduct.images, image],
               };
-          
+
               return newProduct;
             });
           } else {
@@ -109,7 +101,6 @@ export const usePhotoUpload = () => {
         console.error('🟡 HOOK - Error in handleCapturePhoto:', err);
         setErrorMsg('Error al tomar foto. Intente nuevamente.');
       } finally {
-
         // Finally stop showing skeletons
         setIsLoadingImages(false);
         setLoadingImageCount(0);
@@ -118,57 +109,54 @@ export const usePhotoUpload = () => {
     [product, addImages]
   );
 
-
-
   // SELECT FROM PHOTO LIBRARY
-  const handleSelectFromLibrary = useCallback(async (targetProduct?: Product) => {
-    const productToUse = targetProduct || product;
+  const handleSelectFromLibrary = useCallback(
+    async (targetProduct?: Product) => {
+      const productToUse = targetProduct || product;
 
-    try {
-      
-      const images = await selectFromLibrary(
-        // Callback passed to start showing skeleton while processing: onStartProcessing
-        (count: number) => {
-          setIsLoadingImages(true);
-          setLoadingImageCount(count);
-        }
-      );
-
-      if (images.length > 0) {
-        if (productToUse) {
-          // If we have a specific product (passed as parameter), update it directly
-          if (targetProduct) {
-            setProduct(() => {
-              // Always update to the targetProduct with the new images
-              const newProduct = {
-                ...targetProduct,
-                images: [...targetProduct.images, ...images],
-              };
-     
-              return newProduct;
-            });
-          } else {
-            addImages(images);
+      try {
+        const images = await selectFromLibrary(
+          // Callback passed to start showing skeleton while processing: onStartProcessing
+          (count: number) => {
+            setIsLoadingImages(true);
+            setLoadingImageCount(count);
           }
+        );
+
+        if (images.length > 0) {
+          if (productToUse) {
+            // If we have a specific product (passed as parameter), update it directly
+            if (targetProduct) {
+              setProduct(() => {
+                // Always update to the targetProduct with the new images
+                const newProduct = {
+                  ...targetProduct,
+                  images: [...targetProduct.images, ...images],
+                };
+
+                return newProduct;
+              });
+            } else {
+              addImages(images);
+            }
+          }
+        } else {
+          console.log('🟢 HOOK - NOT adding images. Reason: no images selected');
         }
-      } else {
-        console.log('🟢 HOOK - NOT adding images. Reason: no images selected');
+      } catch (err) {
+        console.error('🟢 HOOK - Error in handleSelectFromLibrary:', err);
+        setErrorMsg('Error al seleccionar fotos. Intente nuevamente.');
+      } finally {
+        // Finally stop showing skeleton for images
+        setIsLoadingImages(false);
+        setLoadingImageCount(0);
       }
-    } catch (err) {
-      console.error('🟢 HOOK - Error in handleSelectFromLibrary:', err);
-      setErrorMsg('Error al seleccionar fotos. Intente nuevamente.');
-    } finally {
-
-      // Finally stop showing skeleton for images
-      setIsLoadingImages(false);
-      setLoadingImageCount(0);
-    }
-  }, [product, addImages]);
-
+    },
+    [product, addImages]
+  );
 
   // POLLING UPDATE
   const handlePollingUpdate = useCallback((payload: PollingPayload) => {
-    
     setProduct((currentProduct) => {
       // Fail safely is product is null
       // Or product ID doesn't match the ID sent by the backend
@@ -183,57 +171,47 @@ export const usePhotoUpload = () => {
     });
   }, []);
 
-
   // UPLOAD IMAGES TO CLOUDINARY
   const uploadImages = useCallback(async () => {
     if (!product || product.images.length === 0) return;
 
     setIsUploading(true);
-    setProduct((currentProduct) => (currentProduct ? { ...currentProduct, status: 'uploading' } : null));
+    setProduct((currentProduct) =>
+      currentProduct ? { ...currentProduct, status: 'uploading' } : null
+    );
 
     try {
-      const results = await uploadImagesWithWebhook(
-        product.images,
-        product.id,
-        {
-          maxConcurrent: 8, // Conservative concurrency to avoid rate limits
-          onProgress: (imageIndex: number, progress: number) => {
-            const imageId = product.images[imageIndex]?.id;
-            if (imageId) {
-              setUploadProgress((currentProgress) => ({
-                ...currentProgress,
-                [imageId]: progress,
-              }));
-            }
-          }
-        }
-      );
+      const results = await uploadImagesWithWebhook(product.images, product.id, {
+        maxConcurrent: 8, // Conservative concurrency to avoid rate limits
+      });
 
       const hasErrors = results.some((result: any) => !result.success);
 
       if (hasErrors) {
-        setProduct((currentProduct) => (currentProduct ? { ...currentProduct, status: 'failed' } : null));
+        setProduct((currentProduct) =>
+          currentProduct ? { ...currentProduct, status: 'failed' } : null
+        );
         return;
       }
 
-      setProduct((currentProduct) => (currentProduct ? { ...currentProduct, status: 'processing' } : null));
+      setProduct((currentProduct) =>
+        currentProduct ? { ...currentProduct, status: 'processing' } : null
+      );
 
       // Wait 10 seconds before starting to poll, giving backend time to process
       setTimeout(() => {
         subscribeToProduct(product.id, handlePollingUpdate);
       }, 10000);
-
-
     } catch (err) {
       console.error('🔴 HOOK - Error in uploadImages:', err);
-      setErrorMsg('Error al cargar fotos. Intente nuevamente.')
-      setProduct((currentProduct) => (currentProduct ? { ...currentProduct, status: 'failed' } : null));
+      setErrorMsg('Error al cargar fotos. Intente nuevamente.');
+      setProduct((currentProduct) =>
+        currentProduct ? { ...currentProduct, status: 'failed' } : null
+      );
     } finally {
       setIsUploading(false);
     }
   }, [product, handlePollingUpdate]);
-
-
 
   // RESET
   const reset = useCallback(() => {
@@ -244,7 +222,6 @@ export const usePhotoUpload = () => {
     setIsUploading(false);
     setIsLoadingImages(false);
     setLoadingImageCount(0);
-    setUploadProgress({});
     setErrorMsg(null);
   }, [product]);
 
@@ -253,7 +230,6 @@ export const usePhotoUpload = () => {
     isUploading,
     isLoadingImages,
     loadingImageCount,
-    uploadProgress,
     createNewProduct,
     addImages,
     removeImage,
@@ -261,6 +237,6 @@ export const usePhotoUpload = () => {
     selectFromLibrary: handleSelectFromLibrary,
     uploadImages,
     reset,
-    errorMsg
+    errorMsg,
   };
 };

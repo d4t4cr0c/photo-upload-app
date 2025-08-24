@@ -6,7 +6,6 @@ interface ErrorMessageProps {
 }
 
 export const ErrorMessage: React.FC<ErrorMessageProps> = ({ errorMsg }) => {
-
   if (!errorMsg) return null;
 
   return (

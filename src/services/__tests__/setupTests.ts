@@ -29,7 +29,7 @@ jest.mock('expo-constants', () => ({
 
 // Mock Cloudinary React Native
 jest.mock('cloudinary-react-native', () => ({
-  upload: jest.fn(() => 
+  upload: jest.fn(() =>
     Promise.resolve({
       public_id: 'mock-public-id',
       secure_url: 'https://res.cloudinary.com/mock/image/upload/mock-public-id.jpg',

@@ -6,7 +6,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        'museo': ['MuseoModerno-Regular'],
+        museo: ['MuseoModerno-Regular'],
         'museo-medium': ['MuseoModerno-Medium'],
         'museo-semibold': ['MuseoModerno-SemiBold'],
         'museo-bold': ['MuseoModerno-Bold'],

@@ -21,7 +21,7 @@ export const PhotoActions: React.FC<PhotoActionsProps> = ({
         onPress={onCapturePhoto}
         disabled={!canAddPhotos}
       />
-      
+
       <ActionButton
         icon="images"
         text="Elegir fotos"

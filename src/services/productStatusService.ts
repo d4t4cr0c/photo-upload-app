@@ -11,7 +11,6 @@ export const notifyBackendUploadComplete = async (
   results: any[],
   success: boolean
 ) => {
-  
   try {
     const payload = {
       productId,
@@ -25,7 +24,7 @@ export const notifyBackendUploadComplete = async (
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
-    
+
     const response = await fetch(`${ENV.BACKEND_API_URL}/webhook/upload`, {
       method: 'POST',
       headers,
@@ -40,14 +39,14 @@ export const notifyBackendUploadComplete = async (
     }
   } catch (error) {
     console.error(`🔵 WEBHOOK - Upload notification error for product ${productId}:`, error);
-    
+
     // Handle webhook failure internally - notify listeners that the product failed
     const failedPayload: PollingPayload = {
       productId,
       status: 'failed',
       message: `Backend notification failed: ${error instanceof Error ? error.message : 'Unknown error'}. Images were uploaded but backend was not notified.`,
     };
-    
+
     // Notify any active listeners about the failure
     const callback = listeners.get(productId);
     if (callback) {
@@ -55,40 +54,37 @@ export const notifyBackendUploadComplete = async (
       // Clean up polling since the process has failed
       unsubscribeFromProduct(productId);
     }
-    
-    return { 
-      success: false, 
-      error: failedPayload.message 
+
+    return {
+      success: false,
+      error: failedPayload.message,
     };
   }
 };
-
-
 
 // SHORT POLL LOGIC
 export const subscribeToProduct = (
   productId: string,
   pollingUpdateCallback: (payload: PollingPayload) => void
 ) => {
-  console.log(`🔵 POLLING - Starting continuous polling for product ${productId} (every 5 seconds)`);
+  console.log(
+    `🔵 POLLING - Starting continuous polling for product ${productId} (every 5 seconds)`
+  );
 
   listeners.set(productId, pollingUpdateCallback);
-  
+
   // Start continuous polling every 5 seconds
   const intervalId = setInterval(() => {
-
     console.log(`🔵 POLLING - Checking status for product ${productId}...`);
-   
-    checkProductStatus(productId, pollingUpdateCallback);
 
+    checkProductStatus(productId, pollingUpdateCallback);
   }, 5000);
-  
+
   // Store the interval ID so we can clear it later
   intervals.set(productId, intervalId);
 };
 
 export const unsubscribeFromProduct = (productId: string) => {
-
   // Clear the polling interval if it exists
   const intervalId = intervals.get(productId);
   if (intervalId) {
@@ -96,13 +92,10 @@ export const unsubscribeFromProduct = (productId: string) => {
     clearInterval(intervalId);
     intervals.delete(productId);
   }
-  
+
   // Remove the callback
   listeners.delete(productId);
 };
-
-
-
 
 // POLL backend to check product listing status
 const checkProductStatus = async (
@@ -113,7 +106,6 @@ const checkProductStatus = async (
     const response = await fetch(`${ENV.BACKEND_API_URL}/webhook/${productId}/status`);
 
     if (response.ok) {
-
       const data = await response.json();
 
       const webhookPayload: PollingPayload = {
@@ -130,16 +122,17 @@ const checkProductStatus = async (
         console.log(`🔵 POLLING - Product ${productId} status: ${data.status} - stopping polling`);
         unsubscribeFromProduct(productId);
       } else {
-        console.log(`🔵 POLLING - Product ${productId} status: ${data.status} - continuing polling`);
+        console.log(
+          `🔵 POLLING - Product ${productId} status: ${data.status} - continuing polling`
+        );
       }
-
     } else {
       // Throw error for non-2xx status codes, will be caught below
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
   } catch (error) {
     console.error(`🔵 POLLING - Error checking status for product ${productId}:`, error);
-    
+
     // Handle all errors (network issues, HTTP errors, JSON parsing errors, etc.)
     const errorPayload: PollingPayload = {
       productId,

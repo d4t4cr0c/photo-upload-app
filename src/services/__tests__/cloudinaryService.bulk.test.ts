@@ -6,11 +6,6 @@ jest.mock('cloudinary-react-native', () => ({
   upload: jest.fn(),
 }));
 
-// Mock the Cloudinary URL generator
-jest.mock('@cloudinary/url-gen', () => ({
-  Cloudinary: jest.fn().mockImplementation(() => ({})),
-}));
-
 // Mock environment config
 jest.mock('@/config/env', () => ({
   ENV: {
@@ -30,13 +25,13 @@ describe('Cloudinary Bulk Upload', () => {
       filename: 'test1.jpg',
     },
     {
-      id: '2', 
+      id: '2',
       uri: 'file://test2.jpg',
       filename: 'test2.jpg',
     },
     {
       id: '3',
-      uri: 'file://test3.jpg', 
+      uri: 'file://test3.jpg',
       filename: 'test3.jpg',
     },
   ];
@@ -50,7 +45,6 @@ describe('Cloudinary Bulk Upload', () => {
           public_id: `test-folder/product-test123/${options.options.public_id}`,
           secure_url: `https://res.cloudinary.com/test-cloud/image/upload/test-folder/product-test123/${options.options.public_id}`,
           original_filename: options.file.split('/').pop(),
-          progress: 100,
         });
       }, 100);
     });
@@ -63,7 +57,7 @@ describe('Cloudinary Bulk Upload', () => {
       });
 
       expect(results).toHaveLength(3);
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.success).toBe(true);
         expect(result.publicId).toBeDefined();
         expect(result.secureUrl).toBeDefined();
@@ -73,13 +67,11 @@ describe('Cloudinary Bulk Upload', () => {
       expect(mockUpload).toHaveBeenCalledTimes(3);
     });
 
-    it('should handle progress callbacks', async () => {
-      const progressCallback = jest.fn();
+    it('should handle completion callbacks', async () => {
       const completeCallback = jest.fn();
 
       await uploadMultipleImagesBulk(mockImages, 'test123', {
         maxConcurrent: 2,
-        onProgress: progressCallback,
         onImageComplete: completeCallback,
       });
 
@@ -105,7 +97,7 @@ describe('Cloudinary Bulk Upload', () => {
       const results = await uploadMultipleImagesBulk(mockImages, 'test123');
 
       expect(results).toHaveLength(3);
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.success).toBe(false);
         expect(result.error).toBeDefined();
       });

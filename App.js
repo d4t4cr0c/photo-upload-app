@@ -2,9 +2,11 @@
 import 'expo-crypto';
 import { validateEnv } from './src/config/env';
 
-if (!validateEnv()) {
-  console.error('Configuration Error: Cloudinary credentials are missing. Please check environment configuration.');
-}
-
 import App from './src/App';
+
+if (!validateEnv()) {
+  console.error(
+    'Configuration Error: Cloudinary credentials are missing. Please check environment configuration.'
+  );
+}
 export default App;

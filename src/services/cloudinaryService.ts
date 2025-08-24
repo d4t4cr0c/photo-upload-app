@@ -1,26 +1,10 @@
-import { Cloudinary } from '@cloudinary/url-gen';
 import { ProductImage, UploadResult, BulkUploadOptions } from '@/types';
 import { ENV } from '@/config/env';
 import { notifyBackendUploadComplete } from '@/services/productStatusService';
 
-// Single instance for the entire app
-let cloudinaryInstance: Cloudinary | null = null;
-
-const getCloudinaryInstance = (): Cloudinary => {
-  if (!cloudinaryInstance) {
-    cloudinaryInstance = new Cloudinary({
-      cloud: {
-        cloudName: ENV.CLOUDINARY_CLOUD_NAME,
-      },
-    });
-  }
-  return cloudinaryInstance;
-};
-
 export const uploadImage = async (
   image: ProductImage,
-  productId: string,
-  onProgress?: (progress: number) => void
+  productId: string
 ): Promise<UploadResult> => {
   try {
     // Validate environment configuration
@@ -58,14 +42,9 @@ export const uploadImage = async (
 
     const result = await response.json();
 
-    if (onProgress) {
-      onProgress(100);
-    }
-
     if (result.secure_url) {
+      console.log('Image uplodad to Cloudinary');
 
-      console.log('Image uplodad to Cloudinary')
-      
       return {
         success: true,
         publicId: result.public_id,
@@ -90,15 +69,15 @@ export const uploadMultipleImagesBulk = async (
   productId: string,
   options: BulkUploadOptions = {}
 ): Promise<UploadResult[]> => {
-  const { maxConcurrent = 10, onProgress, onImageComplete } = options;
-  
+  const { maxConcurrent = 10, onImageComplete } = options;
+
   if (images.length === 0) {
     return [];
   }
 
   // Create upload promises for all images
   const uploadPromises = images.map((image, index) => {
-    return uploadImage(image, productId, (progress) => onProgress?.(index, progress))
+    return uploadImage(image, productId)
       .then((result) => {
         onImageComplete?.(index, result);
         return { index, result };
@@ -116,13 +95,13 @@ export const uploadMultipleImagesBulk = async (
   // Process uploads in batches to respect concurrency limits
   const results: UploadResult[] = new Array(images.length);
   const batchSize = Math.min(maxConcurrent, images.length);
-  
+
   for (let i = 0; i < uploadPromises.length; i += batchSize) {
     const batch = uploadPromises.slice(i, i + batchSize);
-    
+
     try {
       const batchResults = await Promise.all(batch);
-      
+
       // Place results in correct order
       batchResults.forEach(({ index, result }) => {
         results[index] = result;
@@ -145,44 +124,36 @@ export const uploadMultipleImagesBulk = async (
   return results;
 };
 
-
-
 export const uploadImagesWithWebhook = async (
   images: ProductImage | ProductImage[],
   productId: string,
   options: BulkUploadOptions = {}
 ): Promise<UploadResult[]> => {
   const imageArray = Array.isArray(images) ? images : [images];
-  
+
   let results: UploadResult[];
-  
+
   if (imageArray.length === 1) {
-    // Single image upload - convert bulk progress callback to single progress
-    const singleProgressCallback = options.onProgress 
-      ? (progress: number) => options.onProgress!(0, progress)
-      : undefined;
-    
-    const result = await uploadImage(imageArray[0], productId, singleProgressCallback);
+    // Single image upload
+    const result = await uploadImage(imageArray[0], productId);
     results = [result];
   } else {
     // Multiple image upload
     results = await uploadMultipleImagesBulk(imageArray, productId, options);
   }
-  
+
   // Send webhook notification - productStatusService handles failures internally
-  const success = results.every(r => r.success);
+  const success = results.every((r) => r.success);
   const webhookResult = await notifyBackendUploadComplete(productId, results, success);
-  
+
   // If webhook failed, mark all uploads as failed to trigger proper error handling
   if (!webhookResult.success) {
-    return results.map(result => ({
+    return results.map((result) => ({
       ...result,
       success: false,
-      error: webhookResult.error || 'Backend notification failed'
+      error: webhookResult.error || 'Backend notification failed',
     }));
   }
-  
+
   return results;
 };
-
-

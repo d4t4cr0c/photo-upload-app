@@ -10,7 +10,7 @@ import {
   StatusMessage,
   MercadoLibreButton,
   ResetButton,
-  ErrorMessage
+  ErrorMessage,
 } from './photo-upload-screen';
 
 export const PhotoUploadScreen: React.FC = () => {
@@ -19,14 +19,13 @@ export const PhotoUploadScreen: React.FC = () => {
     isUploading,
     isLoadingImages,
     loadingImageCount,
-    uploadProgress,
     createNewProduct,
     capturePhoto,
     selectFromLibrary,
     uploadImages,
     removeImage,
     reset,
-    errorMsg
+    errorMsg,
   } = usePhotoUpload();
 
   const handleCapturePhoto = async () => {
@@ -77,24 +76,29 @@ export const PhotoUploadScreen: React.FC = () => {
       return;
     }
 
-    Alert.alert('Crear Publicación', `¿Cargar ${product.images.length} foto(s) y crear publicación?`, [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Confirmar', onPress: () => uploadImages() },
-    ]);
+    Alert.alert(
+      'Crear Publicación',
+      `¿Cargar ${product.images.length} foto(s) y crear publicación?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Confirmar', onPress: () => uploadImages() },
+      ]
+    );
   };
 
   const handleRemoveImage = (imageId: string) => {
     removeImage(imageId);
   };
 
-  const canAddPhotos = !product || (product.status === 'pending' && !isUploading && !isLoadingImages);
-  
+  const canAddPhotos =
+    !product || (product.status === 'pending' && !isUploading && !isLoadingImages);
+
   const canUpload = Boolean(
-    product 
-    && product.images.length > 0 
-    && product.status === 'pending' 
-    && !isUploading 
-    && !isLoadingImages
+    product &&
+      product.images.length > 0 &&
+      product.status === 'pending' &&
+      !isUploading &&
+      !isLoadingImages
   );
 
   return (
@@ -116,7 +120,6 @@ export const PhotoUploadScreen: React.FC = () => {
               product={product}
               isLoadingImages={isLoadingImages}
               loadingImageCount={loadingImageCount}
-              uploadProgress={uploadProgress}
               canAddPhotos={canAddPhotos}
               onRemoveImage={handleRemoveImage}
             />
@@ -130,7 +133,6 @@ export const PhotoUploadScreen: React.FC = () => {
             <MercadoLibreButton product={product} />
 
             <ResetButton product={product} onReset={reset} />
-            
           </View>
         </ScrollView>
       </Container>

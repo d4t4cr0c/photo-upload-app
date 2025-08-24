@@ -23,9 +23,7 @@ export const ResetButton: React.FC<ResetButtonProps> = ({ product, onReset }) =>
       onPress={onReset}>
       <View className="flex-row items-center justify-center">
         <Ionicons name="refresh-outline" size={24} color="#9ca3af" />
-        <Text className="ml-2 text-xl font-black text-green-300">
-          {buttonText}
-        </Text>
+        <Text className="ml-2 text-xl font-black text-green-300">{buttonText}</Text>
       </View>
     </TouchableOpacity>
   );

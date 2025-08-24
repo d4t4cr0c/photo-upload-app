@@ -42,6 +42,5 @@ export interface UploadResult {
 
 export interface BulkUploadOptions {
   maxConcurrent?: number;
-  onProgress?: (imageIndex: number, progress: number) => void;
   onImageComplete?: (imageIndex: number, result: UploadResult) => void;
 }

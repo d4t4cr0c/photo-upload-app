@@ -22,20 +22,21 @@ export default {
       FRONTEND_WEBHOOK_URL: process.env.FRONTEND_WEBHOOK_URL,
       FRONTEND_WEBHOOK_SECRET: process.env.FRONTEND_WEBHOOK_SECRET,
       eas: {
-        projectId: '6104ca08-7a59-408e-8227-1debc156f029'
-      }
+        projectId: '6104ca08-7a59-408e-8227-1debc156f029',
+      },
     },
 
     plugins: [
       [
-        "expo-image-picker",
+        'expo-image-picker',
         {
-          "photosPermission": "The app accesses your photos to let you share them with your friends.",
-          "cameraPermission": "The app accesses your camera to let you take photos and share them with your friends.",
-          "microphonePermission": false
-        }
+          photosPermission: 'The app accesses your photos to let you share them with your friends.',
+          cameraPermission:
+            'The app accesses your camera to let you take photos and share them with your friends.',
+          microphonePermission: false,
+        },
       ],
-      "expo-font"
+      'expo-font',
     ],
 
     orientation: 'portrait',
@@ -52,23 +53,23 @@ export default {
 
     ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.d4v1dl3d4.photouploadapp",
+      bundleIdentifier: 'com.d4v1dl3d4.photouploadapp',
       infoPlist: {
-        "NSCameraUsageDescription": "This app needs access to camera to take photos.",
-        "NSPhotoLibraryUsageDescription": "This app needs access to photo library to select images."
-      }
+        NSCameraUsageDescription: 'This app needs access to camera to take photos.',
+        NSPhotoLibraryUsageDescription: 'This app needs access to photo library to select images.',
+      },
     },
-    
+
     android: {
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
         backgroundColor: '#ffffff',
       },
       permissions: [
-        "android.permission.CAMERA",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.INTERNET"
+        'android.permission.CAMERA',
+        'android.permission.READ_EXTERNAL_STORAGE',
+        'android.permission.WRITE_EXTERNAL_STORAGE',
+        'android.permission.INTERNET',
       ],
       package: 'com.d4v1dl3d4.photouploadapp',
       intentFilters: [
@@ -81,11 +82,11 @@ export default {
             },
             {
               scheme: 'http',
-            }
+            },
           ],
-          category: ['BROWSABLE', 'DEFAULT']
-        }
-      ]
-    }
-  }
+          category: ['BROWSABLE', 'DEFAULT'],
+        },
+      ],
+    },
+  },
 };

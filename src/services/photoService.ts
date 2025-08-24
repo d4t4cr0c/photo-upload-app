@@ -15,12 +15,8 @@ export const requestPermissions = async (): Promise<boolean> => {
   return hasPermissions;
 };
 
-
 // TAKE PHOTO
-export async function capturePhoto(
-  onStartProcessing: () => void
-): Promise<ProductImage | null> {
-
+export async function capturePhoto(onStartProcessing: () => void): Promise<ProductImage | null> {
   try {
     const hasPermissions = await requestPermissions();
 
@@ -32,7 +28,7 @@ export async function capturePhoto(
       mediaTypes: ['images'],
       allowsEditing: false,
       // Use full quality, resize later, to avoid delay
-      quality: 1.0, 
+      quality: 1.0,
     });
 
     if (result.canceled || !result.assets[0]) return null;
@@ -51,15 +47,12 @@ export async function capturePhoto(
       uploaded: false,
     };
 
-    return productImage
-    
+    return productImage;
   } catch (error) {
     console.error('❌ Error in capturePhoto:', error);
     throw error;
   }
-};
-
-
+}
 
 // SELECT IMAGES FROM PHOTO LIBRARY
 // Function takes a callback as param
@@ -78,16 +71,16 @@ export async function selectFromLibrary(
       allowsMultipleSelection: true,
       allowsEditing: false, // Disable editing to improve performance
       // Use full quality for selection, resize later, to avoid delay
-      quality: 1.0, 
+      quality: 1.0,
       selectionLimit: 10,
     });
 
     // Early return in cancelled or no immages selected
     if (result.canceled || !result.assets) return [];
-    
+
     // Show skeletons while processing images, one for each image
     onStartProcessing(result.assets.length);
-    
+
     // Resize images
     const resizedImages = await Promise.all(
       result.assets.map(async (asset) => {
@@ -101,14 +94,12 @@ export async function selectFromLibrary(
       })
     );
 
-    return resizedImages
-
+    return resizedImages;
   } catch (error) {
-    console.error('❌ Error in selectFromLibrary:', error)
+    console.error('❌ Error in selectFromLibrary:', error);
     throw error;
   }
-};
-
+}
 
 // RESIZE IMAGES TO 1500 px
 const resizeImage = async (uri: string): Promise<ImageResult> => {
