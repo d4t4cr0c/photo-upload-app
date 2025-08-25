@@ -199,10 +199,15 @@ export const usePhotoUpload = () => {
         currentProduct ? { ...currentProduct, status: 'waiting' } : null
       );
 
-      // Wait 10 seconds before starting to poll, giving backend time to process
+      // Wait 5 seconds, change status to 'processing'
+      setTimeout(() => {
+        setProduct((currentProduct) => currentProduct ? { ...currentProduct, status: 'processing' } : null); 
+      }, 5000)
+
+      // Wait another 5 seconds before starting to poll, giving backend time to process
       setTimeout(() => {
         subscribeToProduct(product.id, handlePollingUpdate);
-      }, 10000);
+      }, 5000);
 
     } catch (err) {
       console.error('🔴 HOOK - Error in uploadImages:', err);
