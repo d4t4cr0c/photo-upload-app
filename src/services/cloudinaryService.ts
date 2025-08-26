@@ -42,7 +42,8 @@ export async function uploadImage(image: ProductImage, productId: string): Promi
     if (!ENV.CLOUDINARY_CLOUD_NAME || !ENV.CLOUDINARY_UPLOAD_PRESET) {
       throw new Error('Cloudinary configuration missing');
     }
-
+    // Cloudinary public_id must include whole path
+    // even when specifyin asset_folder property in FormData
     const publicId = `${ENV.CLOUDINARY_FOLDER}/product-${productId}/${image.filename.replace(/\.[^/.]+$/, '')}`;
 
     // Create FormData for upload
@@ -53,7 +54,9 @@ export async function uploadImage(image: ProductImage, productId: string): Promi
       name: image.filename,
     } as any);
     formData.append('upload_preset', ENV.CLOUDINARY_UPLOAD_PRESET);
+    // Set Cloudinary Asset Folder, otherwise images get uploaded to root folder
     formData.append('asset_folder', ENV.CLOUDINARY_FOLDER);
+    // Set Cloudinary Public ID for full image path
     formData.append('public_id', publicId);
 
     const response = await fetch(
