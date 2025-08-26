@@ -44,7 +44,7 @@ export async function uploadImage(image: ProductImage, productId: string): Promi
     }
 
     const folder = `product-${productId}`;
-    const publicId = image.filename.replace(/\.[^/.]+$/, '');
+    const publicId = `${ENV.CLOUDINARY_FOLDER}/product-${productId}/${image.filename.replace(/\.[^/.]+$/, '')}`;
 
     // Create FormData for upload
     const formData = new FormData();
