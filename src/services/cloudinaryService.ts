@@ -2,7 +2,6 @@ import { ProductImage, UploadResult, BulkUploadOptions } from '@/types';
 import { ENV } from '@/config/env';
 import { notifyBackendUploadComplete } from '@/services/productStatusService';
 
-
 export async function uploadImagesWithWebhook(
   images: ProductImage | ProductImage[],
   productId: string,
@@ -35,21 +34,17 @@ export async function uploadImagesWithWebhook(
   }
 
   return results;
-};
+}
 
-
-export async function uploadImage(
-  image: ProductImage,
-  productId: string
-): Promise<UploadResult> {
+export async function uploadImage(image: ProductImage, productId: string): Promise<UploadResult> {
   try {
     // Validate environment configuration
     if (!ENV.CLOUDINARY_CLOUD_NAME || !ENV.CLOUDINARY_UPLOAD_PRESET) {
       throw new Error('Cloudinary configuration missing');
     }
 
-    const folder = `${ENV.CLOUDINARY_FOLDER}/product-${productId}`;
-    const publicId = `${folder}/${image.filename.replace(/\.[^/.]+$/, '')}`;
+    const folder = `product-${productId}`;
+    const publicId = image.filename.replace(/\.[^/.]+$/, '');
 
     // Create FormData for upload
     const formData = new FormData();
@@ -59,6 +54,8 @@ export async function uploadImage(
       name: image.filename,
     } as any);
     formData.append('upload_preset', ENV.CLOUDINARY_UPLOAD_PRESET);
+    formData.append('asset_folder', ENV.CLOUDINARY_FOLDER);
+    formData.append('folder', folder);
     formData.append('public_id', publicId);
 
     const response = await fetch(
@@ -98,7 +95,7 @@ export async function uploadImage(
       error: `Upload error: ${error instanceof Error ? error.message : error}`,
     };
   }
-};
+}
 
 export async function uploadMultipleImagesBulk(
   images: ProductImage[],
@@ -158,5 +155,4 @@ export async function uploadMultipleImagesBulk(
   }
 
   return results;
-};
-
+}

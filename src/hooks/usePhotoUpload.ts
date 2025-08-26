@@ -201,14 +201,15 @@ export const usePhotoUpload = () => {
 
       // Wait 5 seconds, change status to 'processing'
       setTimeout(() => {
-        setProduct((currentProduct) => currentProduct ? { ...currentProduct, status: 'processing' } : null); 
-      }, 5000)
+        setProduct((currentProduct) =>
+          currentProduct ? { ...currentProduct, status: 'processing' } : null
+        );
+      }, 5000);
 
       // Wait another 5 seconds before starting to poll, giving backend time to process
       setTimeout(() => {
         subscribeToProduct(product.id, handlePollingUpdate);
       }, 5000);
-
     } catch (err) {
       console.error('🔴 HOOK - Error in uploadImages:', err);
       setErrorMsg('Error al cargar fotos. Intente nuevamente.');

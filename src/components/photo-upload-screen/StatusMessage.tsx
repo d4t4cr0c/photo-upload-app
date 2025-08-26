@@ -103,18 +103,15 @@ export const StatusMessage: React.FC<StatusMessageProps> = ({ product }) => {
     <View
       className={`mb-6 rounded-xl border ${currentStatus.borderColor} ${currentStatus.bgColor} p-4`}>
       <View className="flex-row items-center justify-center">
-        {
-          product.status === 'processing' 
-          || product.status === 'uploading' 
-          || product.status === 'waiting' 
-          ? (
-              <Animated.View style={{ transform: [{ rotate: rotation }] }}>
-                <Ionicons name="hourglass-outline" size={30} color={currentStatus.iconColor} />
-              </Animated.View>
-            ) : (
-              <Ionicons name={currentStatus.icon} size={30} color={currentStatus.iconColor} />
-            )
-        }
+        {product.status === 'processing' ||
+        product.status === 'uploading' ||
+        product.status === 'waiting' ? (
+          <Animated.View style={{ transform: [{ rotate: rotation }] }}>
+            <Ionicons name="hourglass-outline" size={30} color={currentStatus.iconColor} />
+          </Animated.View>
+        ) : (
+          <Ionicons name={currentStatus.icon} size={30} color={currentStatus.iconColor} />
+        )}
 
         <Text className={`ml-2 text-xl font-medium ${currentStatus.color}`}>
           {currentStatus.text}
