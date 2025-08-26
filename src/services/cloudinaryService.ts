@@ -43,7 +43,6 @@ export async function uploadImage(image: ProductImage, productId: string): Promi
       throw new Error('Cloudinary configuration missing');
     }
 
-    const folder = `product-${productId}`;
     const publicId = `${ENV.CLOUDINARY_FOLDER}/product-${productId}/${image.filename.replace(/\.[^/.]+$/, '')}`;
 
     // Create FormData for upload
@@ -55,7 +54,6 @@ export async function uploadImage(image: ProductImage, productId: string): Promi
     } as any);
     formData.append('upload_preset', ENV.CLOUDINARY_UPLOAD_PRESET);
     formData.append('asset_folder', ENV.CLOUDINARY_FOLDER);
-    formData.append('folder', folder);
     formData.append('public_id', publicId);
 
     const response = await fetch(
