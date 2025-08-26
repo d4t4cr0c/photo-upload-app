@@ -3,9 +3,8 @@ import { manipulateAsync, SaveFormat, ImageResult } from 'expo-image-manipulator
 import { ProductImage } from '@/types';
 
 // Simple UUID alternative for React Native
-const generateId = () => {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
-};
+const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
+
 
 // REQUEST PERMISSIONS TO USER
 export const requestPermissions = async (): Promise<boolean> => {
@@ -43,7 +42,7 @@ export async function capturePhoto(onStartProcessing: () => void): Promise<Produ
     const productImage = {
       id: generateId(),
       uri: resizedImage.uri,
-      filename: `product_${Date.now()}.jpg`,
+      filename: `image-${generateId()}.jpg`,
       uploaded: false,
     };
 
@@ -88,7 +87,7 @@ export async function selectFromLibrary(
         return {
           id: generateId(),
           uri: resizedImage.uri,
-          filename: `product_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.jpg`,
+          filename: `image-${generateId()}.jpg`,
           uploaded: false,
         };
       })
