@@ -76,14 +76,17 @@ export const PhotoUploadScreen: React.FC = () => {
       return;
     }
 
-    Alert.alert(
-      'Crear Publicación',
-      `¿Cargar ${product.images.length} foto(s) y crear publicación?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Confirmar', onPress: () => uploadImages() },
-      ]
-    );
+    uploadImages();
+
+    // Confirm before proceesing with upload
+    // Alert.alert(
+    //   'Crear Publicación',
+    //   `¿Cargar ${product.images.length} foto(s) y crear publicación?`,
+    //   [
+    //     { text: 'Cancelar', style: 'cancel' },
+    //     { text: 'Confirmar', onPress: () => uploadImages() },
+    //   ]
+    // );
   };
 
   const handleRemoveImage = (imageId: string) => {
