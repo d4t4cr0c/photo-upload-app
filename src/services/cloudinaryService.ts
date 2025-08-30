@@ -53,8 +53,9 @@ export async function uploadImage(image: ProductImage, productId: string): Promi
       type: 'image/jpeg',
       name: image.filename,
     } as any);
-    formData.append('upload_preset', ENV.CLOUDINARY_UPLOAD_PRESET);
-    // Set Cloudinary Asset Folder, otherwise images get uploaded to root folder
+    // Upload preset in Cloudinary dashboard determines the asset folder
+    formData.append('upload_preset', 'cds-images');
+    // Set Cloudinary Asset Folder just in case
     formData.append('asset_folder', 'cds-images');
     // Set Cloudinary Public ID for full image path
     formData.append('public_id', publicId);
