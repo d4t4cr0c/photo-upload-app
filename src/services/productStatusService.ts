@@ -121,7 +121,7 @@ const checkProductStatus = async (
       if (data.status === 'completed' || data.status === 'failed') {
         console.log(`🔵 POLLING - Product ${productId} status: ${data.status} - stopping polling`);
         unsubscribeFromProduct(productId);
-      } else {
+      } else if (data.status === 'processing') {
         console.log(
           `🔵 POLLING - Product ${productId} status: ${data.status} - continuing polling`
         );
