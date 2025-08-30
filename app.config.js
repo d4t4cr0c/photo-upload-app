@@ -16,7 +16,7 @@ export default {
 
     extra: {
       CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
-      CLOUDINARY_FOLDER: process.env.CLOUDINARY_FOLDER,
+      CLOUDINARY_FOLDER: 'cds-images',
       CLOUDINARY_UPLOAD_PRESET: process.env.CLOUDINARY_UPLOAD_PRESET,
       BACKEND_API_URL: process.env.BACKEND_API_URL,
       FRONTEND_WEBHOOK_URL: process.env.FRONTEND_WEBHOOK_URL,
