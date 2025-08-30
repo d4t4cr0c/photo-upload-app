@@ -13,7 +13,7 @@ const getEnvConfig = (): EnvConfig => {
 
   const config = {
     CLOUDINARY_CLOUD_NAME: extra?.CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME || '',
-    CLOUDINARY_FOLDER: extra?.CLOUDINARY_FOLDER || process.env.CLOUDINARY_FOLDER || 'app-images',
+    CLOUDINARY_FOLDER: extra?.CLOUDINARY_FOLDER || process.env.CLOUDINARY_FOLDER,
     CLOUDINARY_UPLOAD_PRESET:
       extra?.CLOUDINARY_UPLOAD_PRESET || process.env.CLOUDINARY_UPLOAD_PRESET || '',
     BACKEND_API_URL:
