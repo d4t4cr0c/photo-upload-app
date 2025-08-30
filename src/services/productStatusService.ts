@@ -25,18 +25,18 @@ export const notifyBackendUploadComplete = async (
       'Content-Type': 'application/json',
     };
 
-    const response = await fetch(`${ENV.BACKEND_API_URL}/webhook/upload`, {
-      method: 'POST',
-      headers,
-      body: payloadString,
-    });
+    // const response = await fetch(`${ENV.BACKEND_API_URL}/webhook/upload`, {
+    //   method: 'POST',
+    //   headers,
+    //   body: payloadString,
+    // });
 
-    if (response.ok) {
-      console.log(`🔵 WEBHOOK - Upload notification sent successfully for product ${productId}`);
-      return { success: true };
-    } else {
-      throw new Error(`Upload notification failed for product ${productId}: ${response.status}`);
-    }
+    // if (response.ok) {
+    //   console.log(`🔵 WEBHOOK - Upload notification sent successfully for product ${productId}`);
+    //   return { success: true };
+    // } else {
+    //   throw new Error(`Upload notification failed for product ${productId}: ${response.status}`);
+    // }
   } catch (error) {
     console.error(`🔵 WEBHOOK - Upload notification error for product ${productId}:`, error);
 

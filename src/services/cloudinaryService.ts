@@ -25,7 +25,7 @@ export async function uploadImagesWithWebhook(
   const webhookResult = await notifyBackendUploadComplete(productId, results, success);
 
   // If webhook failed, mark all uploads as failed to trigger proper error handling
-  if (!webhookResult.success) {
+  if (webhookResult && !webhookResult.success) {
     return results.map((result) => ({
       ...result,
       success: false,
