@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Product, ProductImage, PollingPayload } from '@/types';
 import { capturePhoto, selectFromLibrary } from '@/services/photoService';
-import { uploadImagesWithWebhook } from '@/services/cloudinaryService';
+import { uploadImages as uploadImagesService } from '@/services/uploadService';
 import { subscribeToProduct, unsubscribeFromProduct } from '@/services/productStatusService';
 
 // Simple UUID alternative for React Native
@@ -171,7 +171,7 @@ export const usePhotoUpload = () => {
     });
   }, []);
 
-  // UPLOAD IMAGES TO CLOUDINARY
+  // UPLOAD IMAGES VIA WEBHOOK
   const uploadImages = useCallback(async () => {
     if (!product || product.images.length === 0) return;
 
@@ -181,7 +181,7 @@ export const usePhotoUpload = () => {
     );
 
     try {
-      const results = await uploadImagesWithWebhook(product.images, product.id, {
+      const results = await uploadImagesService(product.images, product.id, {
         maxConcurrent: 8, // Conservative concurrency to avoid rate limits
       });
 

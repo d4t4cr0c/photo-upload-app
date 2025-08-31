@@ -15,11 +15,8 @@ export default {
     },
 
     extra: {
-      CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
-      CLOUDINARY_FOLDER: process.env.CLOUDINARY_FOLDER,
-      CLOUDINARY_UPLOAD_PRESET: process.env.CLOUDINARY_UPLOAD_PRESET,
       BACKEND_API_URL: process.env.BACKEND_API_URL,
-      FRONTEND_WEBHOOK_URL: process.env.FRONTEND_WEBHOOK_URL,
+      FRONTEND_API_KEY: process.env.FRONTEND_API_KEY,
       FRONTEND_WEBHOOK_SECRET: process.env.FRONTEND_WEBHOOK_SECRET,
       eas: {
         projectId: '6104ca08-7a59-408e-8227-1debc156f029',

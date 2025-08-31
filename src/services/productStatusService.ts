@@ -5,63 +5,6 @@ import { ENV } from '@/config/env';
 const listeners = new Map<string, (payload: PollingPayload) => void>();
 const intervals = new Map<string, NodeJS.Timeout>();
 
-// Notify backend when images upload is complete (webhook)
-export const notifyBackendUploadComplete = async (
-  productId: string,
-  results: any[],
-  success: boolean
-) => {
-  try {
-    const payload = {
-      productId,
-      event: 'images_uploaded',
-      success,
-      uploadResults: results,
-      timestamp: new Date().toISOString(),
-    };
-
-    const payloadString = JSON.stringify(payload);
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    const response = await fetch(`${ENV.BACKEND_API_URL}/webhook/upload`, {
-      method: 'POST',
-      headers,
-      body: payloadString,
-    });
-
-    if (response.ok) {
-      console.log(`🔵 WEBHOOK - Upload notification sent successfully for product ${productId}`);
-      return { success: true };
-    } else {
-      throw new Error(`Upload notification failed for product ${productId}: ${response.status}`);
-    }
-  } catch (error) {
-    console.error(`🔵 WEBHOOK - Upload notification error for product ${productId}:`, error);
-
-    // Handle webhook failure internally - notify listeners that the product failed
-    const failedPayload: PollingPayload = {
-      productId,
-      status: 'failed',
-      message: `Backend notification failed: ${error instanceof Error ? error.message : 'Unknown error'}. Images were uploaded but backend was not notified.`,
-    };
-
-    // Notify any active listeners about the failure
-    const callback = listeners.get(productId);
-    if (callback) {
-      callback(failedPayload);
-      // Clean up polling since the process has failed
-      unsubscribeFromProduct(productId);
-    }
-
-    return {
-      success: false,
-      error: failedPayload.message,
-    };
-  }
-};
-
 // SHORT POLL LOGIC
 export const subscribeToProduct = (
   productId: string,
@@ -103,7 +46,7 @@ const checkProductStatus = async (
   pollingUpdateCallback: (payload: PollingPayload) => void
 ) => {
   try {
-    const response = await fetch(`${ENV.BACKEND_API_URL}/webhook/${productId}/status`);
+    const response = await fetch(`${ENV.BACKEND_API_URL}/api/${productId}/status`);
 
     if (response.ok) {
       const data = await response.json();

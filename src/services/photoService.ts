@@ -5,7 +5,6 @@ import { ProductImage } from '@/types';
 // Simple UUID alternative for React Native
 const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
 
-
 // REQUEST PERMISSIONS TO USER
 export const requestPermissions = async (): Promise<boolean> => {
   const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
