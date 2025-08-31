@@ -37,11 +37,13 @@ export async function uploadImages(
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    await response.json();
+    const resJson = await response.json();
+    console.log('Images uploaded to backend ', JSON.stringify(resJson))
 
     // Return success results for all images
     return imageArray.map(() => ({ success: true }));
   } catch (error) {
+    console.error('Error uploading images: ', error)
     // Return error results for all images
     return imageArray.map(() => ({
       success: false,
