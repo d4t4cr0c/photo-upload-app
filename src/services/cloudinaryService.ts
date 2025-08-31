@@ -42,23 +42,32 @@ export async function uploadImage(image: ProductImage, productId: string): Promi
     if (!ENV.CLOUDINARY_CLOUD_NAME || !ENV.CLOUDINARY_UPLOAD_PRESET) {
       throw new Error('Cloudinary configuration missing');
     }
-    // Cloudinary public_id must include whole path
-    // even when specifyin asset_folder property in FormData
-    const publicId = `cds-images/product-${productId}/${image.filename.replace(/\.[^/.]+$/, '')}`;
+    
+    // Set asset folder path for organization
+    const assetFolder = 'cds-images';
+    const publicId = assetFolder + '/' + image.filename.replace(/\.[^/.]+$/, '');
 
     // Create FormData for upload
     const formData = new FormData();
     formData.append('file', {
+
       uri: image.uri,
       type: 'image/jpeg',
       name: image.filename,
+
     } as any);
+
     // Upload preset in Cloudinary dashboard determines the asset folder
     formData.append('upload_preset', 'cds-images');
-    // Set Cloudinary Asset Folder just in case
+    // Set asset folder path for image organization
     formData.append('asset_folder', 'cds-images');
-    // Set Cloudinary Public ID for full image path
+    // Set public ID (just the identifier, not path)
     formData.append('public_id', publicId);
+    // Doesn't work
+    //formData.append('use_filename', 'true')
+    // Doesn't work
+    // Ensure public ID path matches asset folder path
+    //formData.append('use_asset_folder_as_public_id_prefix', 'true');
 
     const response = await fetch(
       `https://api.cloudinary.com/v1_1/${ENV.CLOUDINARY_CLOUD_NAME}/image/upload`,
@@ -72,7 +81,7 @@ export async function uploadImage(image: ProductImage, productId: string): Promi
     );
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`Upload to Cloudinary failed - HTTP error - status: ${response.status}`);
     }
 
     const result = await response.json();
@@ -92,6 +101,7 @@ export async function uploadImage(image: ProductImage, productId: string): Promi
       };
     }
   } catch (error) {
+    console.error(error)
     return {
       success: false,
       error: `Upload error: ${error instanceof Error ? error.message : error}`,
