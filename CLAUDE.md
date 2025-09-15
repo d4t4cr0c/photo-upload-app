@@ -11,7 +11,6 @@ This is a React Native photo upload app built with Expo that allows users to cap
 - **Frontend**: React Native with Expo framework
 - **Styling**: NativeWind (Tailwind CSS variant for React Native)
 - **Image Handling**: expo-image-picker for photo capture/selection
-- **Cloud Storage**: Cloudinary for image uploads with automatic folder organization (`/app-images/product-${productId}`)
 - **Backend Integration**: Webhooks from backend service for listing status updates
 - **Backend Service**: Separate ML listings backend that processes images with Claude API and creates Mercado Libre listings
 
@@ -44,16 +43,16 @@ pnpm run prebuild      # Generate native code
 ## Image Upload Workflow
 
 1. User captures/selects product photos using expo-image-picker
-2. Images are resized to 1200px (larger dimension) for bandwidth optimization
-3. Images uploaded to Cloudinary in organized folders: `/app-images/product-${productId}`
+2. Images are resized to 1500px (larger dimension) for bandwidth optimization
+3. Images uploaded to backend app
 4. Backend service processes images via Claude API
 5. Automated Mercado Libre listing creation
-6. Webhook notification back to frontend with success/failure status
+6. Notification back to frontend with success/failure status
 7. Display listing permalink or error message to user
 
 ## Environment Setup
 
-Create `.env` file with Cloudinary credentials (see `.env.example`).
+Create `.env` file with credentials (see `.env.example`).
 
 ## Styling Convention
 
