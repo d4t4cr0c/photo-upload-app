@@ -68,7 +68,7 @@ export default {
         'android.permission.WRITE_EXTERNAL_STORAGE',
         'android.permission.INTERNET',
       ],
-      package: 'com.d4v1dl3d4.photouploadapp',
+      package: 'com.d4t4cr0c.photouploadapp',
       intentFilters: [
         {
           action: 'VIEW',

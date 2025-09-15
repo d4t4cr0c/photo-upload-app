@@ -1,4 +1,4 @@
-import { uploadImages } from '../uploadService';
+import { uploadImages } from '@/services/uploadService';
 import { ProductImage } from '@/types';
 
 // Mock fetch
