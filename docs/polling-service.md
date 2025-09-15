@@ -145,7 +145,6 @@ The service also handles true webhook notifications:
 notifyBackendUploadComplete(productId, results, success)
 ```
 
-Sends POST request to `/webhook/upload` when image uploads complete, allowing backend to begin processing.
 
 ## Benefits
 
