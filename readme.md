@@ -13,7 +13,7 @@ App móvil para automatizar la creación de publicaciones en Mercado Libre con I
 ## Características
 
 - **Captura y Selección de Fotos**: Usa la cámara del dispositivo o la galería para capturar imágenes de productos
-- **Análisis Potenciado por IA**: El backend analiza imágenes usando la API de Claude Sonnet 4
+- **Análisis Potenciado por IA**: El backend (no incluido en este repositorio) analiza imágenes usando la API de Claude Sonnet 4
 - **Publicaciones Automatizadas**: Crea publicaciones de productos en Mercado Libre automáticamente
 - **Actualizaciones de Estado en Tiempo Real**: Servicio de sondeo monitorea el progreso de creación de publicaciones
 - **UI Moderna**: Interfaz limpia construida con NativeWind (Tailwind CSS para React Native)
@@ -211,7 +211,7 @@ A React Native mobile application built with Expo that enables users to capture 
 
 - **Photo Capture & Selection**: Use device camera or photo library to capture product images
 - **Intelligent Image Processing**: Automatic image resizing to 1500px for optimal bandwidth usage
-- **AI-Powered Analysis**: Backend service analyzes images using Claude API
+- **AI-Powered Analysis**: Backend service (not included in this repo) analyzes images using Claude API
 - **Automated Listings**: Creates Mercado Libre product listings automatically
 - **Real-time Status Updates**: Polling service monitors listing creation progress
 - **Modern UI**: Clean interface built with NativeWind (Tailwind CSS for React Native)
