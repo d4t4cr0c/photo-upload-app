@@ -1,15 +1,12 @@
 # MercadoFácil IA (Frontend App)
 
-**Language / Idioma:** [Español](#español) | [English](#english)
+[English Version](#project-overview)
 
 ---
 
-## Español
-App móvil para crear publicaciones en Mercado Libre en forma automática usando IA.
+## Ver la demo
 
-## Ver el demo
-
-[![Video demo](images/readme/demo-thumbnail.jpg)](https://youtu.be/h2vEqL_I9pU?si=0lVIruNuDzCA_ObJ)
+[![Video demo](images/readme/demo-thumbnail-spanish.jpg)](https://youtu.be/h2vEqL_I9pU?si=0lVIruNuDzCA_ObJ)
 
 ## Características
 
@@ -200,7 +197,7 @@ interface PollingPayload {
 
 ---
 
-## English
+## Project Overview
 
 A React Native mobile application built with Expo that enables users to capture or select product photos and automatically create Mercado Libre listings through AI-powered image analysis.
 
