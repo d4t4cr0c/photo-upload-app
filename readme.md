@@ -1,6 +1,212 @@
-# React Native Photo Upload App
+# MercadoFácil IA (Frontend App)
+
+**Language / Idioma:** [Español](#español) | [English](#english)
+
+---
+
+## Español
+App móvil para crear publicaciones en Mercado Libre en forma automática usando IA.
+
+## Ver el demo
+
+[![Video demo](images/readme/demo-thumbnail.jpg)](https://youtu.be/h2vEqL_I9pU?si=0lVIruNuDzCA_ObJ)
+
+## Características
+
+- **Captura y Selección de Fotos**: Usa la cámara del dispositivo o la galería para capturar imágenes de productos
+- **Análisis Potenciado por IA**: El backend analiza imágenes usando la API de Claude Sonnet 4
+- **Publicaciones Automatizadas**: Crea publicaciones de productos en Mercado Libre automáticamente
+- **Actualizaciones de Estado en Tiempo Real**: Servicio de sondeo monitorea el progreso de creación de publicaciones
+- **UI Moderna**: Interfaz limpia construida con NativeWind (Tailwind CSS para React Native)
+
+## Arquitectura
+
+### Stack Frontend
+- **React Native** con framework Expo
+- **TypeScript** para seguridad de tipos
+- **NativeWind** para estilos (variante Tailwind CSS)
+- **expo-image-picker** para captura y selección de fotos
+
+### Integración Backend
+- Carga directa de imágenes a la API backend
+- Sondeo de estado en tiempo real con patrón Observer
+- Protección de defensa en profundidad contra "race conditions"
+
+### Flujo de Procesamiento de Imágenes
+1. Usuario captura/selecciona fotos de productos
+2. Imágenes redimensionadas a 1500px (dimensión mayor) para optimización de ancho de banda
+3. Carga directa al servicio backend
+4. Backend analiza imágenes con API de Claude Sonnet 4
+5. Creación automatizada de listado en Mercado Libre
+6. Notificaciones de estado al frontend
+7. Mostrar enlace permanente del listado o mensajes de error
+
+## Estructura del Proyecto
+
+```
+src/
+├── App.tsx                     # Punto de entrada principal de la aplicación
+├── components/
+│   ├── Container.tsx           # Contenedor SafeAreaView con estilos consistentes
+│   └── PhotoUploadScreen.tsx       # Componente de diseño de pantalla principal
+└── services/
+    └── productStatusService.ts # Servicio de sondeo con patrón Observer
+```
+
+## Desarrollo
+
+### Requisitos Previos
+- Node.js (con gestor de paquetes pnpm)
+- Expo CLI
+- Entorno de desarrollo React Native
+
+### Instalación
+
+```bash
+# Instalar dependencias
+pnpm install
+
+# Crear archivo de entorno
+cp .env.example .env
+# Editar .env con tus credenciales de la API backend
+```
+
+### Scripts Disponibles
+
+```bash
+# Iniciar servidor de desarrollo
+pnpm start
+
+# Desarrollo específico por plataforma
+pnpm run ios      # Simulador iOS
+pnpm run android  # Emulador Android
+pnpm run web      # Navegador web
+
+# Calidad de código
+pnpm run lint     # Ejecutar verificaciones ESLint y Prettier
+pnpm run format   # Auto-corregir problemas de ESLint y formatear código
+
+# Compilación
+pnpm run prebuild # Generar código nativo
+```
+
+## Configuración
+
+### Variables de Entorno
+
+Crea un archivo `.env` basado en `.env.example`:
+
+```env
+# URL del Backend
+BACKEND_API_URL=
+
+# Para validación de carga de imágenes
+FRONTEND_API_KEY=
+```
+
+### Alias de Rutas
+
+El proyecto usa alias de rutas para importaciones más limpias:
+- `@/*` apunta a `src/*`
+
+## Convención de Estilos
+
+La aplicación usa clases NativeWind en objetos de estilo para consistencia:
+
+```typescript
+const styles = {
+  container: 'flex flex-1 m-6',
+  title: 'text-xl font-bold',
+  button: 'bg-blue-500 px-4 py-2 rounded'
+};
+```
+
+## Servicio de Sondeo de Estado
+
+La aplicación implementa un servicio de sondeo sofisticado con patrón Observer:
+
+### Características Clave
+- **API tipo Pub/Sub**: Interfaz de suscripción/desuscripción para actualizaciones de estado
+- **Sondeo cada 5 segundos**: Verificaciones regulares al endpoint de estado del backend
+- **Auto-limpieza**: Desuscripción automática al completar
+- **Resiliencia ante errores**: Manejo robusto de errores con degradación elegante
+
+### Ejemplo de Uso
+```typescript
+import { subscribeToProduct, unsubscribeFromProduct } from '@/services/productStatusService';
+
+// Suscribirse a actualizaciones de producto
+subscribeToProduct(productId, (payload) => {
+  setProduct(payload.product);
+  setStatus(payload.status);
+  setMessage(payload.message);
+});
+
+// Limpieza manual (usualmente no necesaria debido a auto-desuscripción)
+unsubscribeFromProduct(productId);
+```
+
+### Flujo de Estados
+- `processing` → Backend está analizando imágenes y creando el listado
+- `completed` → Listado creado exitosamente (muestra enlace permanente)
+- `failed` → Ocurrió un error durante el procesamiento
+
+## Manejo de Errores y Protección
+
+La aplicación implementa múltiples capas de protección:
+
+### Protección a Nivel de UI
+- Botones deshabilitados durante el procesamiento para prevenir envíos duplicados
+- Botón de reinicio solo aparece después de completar
+- Flujo de producto único previene operaciones concurrentes
+
+### Protección a Nivel de Aplicación
+- Validación de ID de producto previene contaminación cruzada
+- Protecciones contra condiciones de carrera y respuestas retrasadas del backend
+
+### Protección a Nivel de Servicio
+- Limpieza automática previene fugas de memoria
+- Manejo integral de errores con degradación elegante
+- Recuperación ante fallas de red
+
+## Integración Backend
+
+### Endpoints de API
+
+#### Carga de Imágenes
+```
+POST ${BACKEND_API_URL}/api/image/uploads
+```
+
+#### Sondeo de Estado
+```
+GET ${BACKEND_API_URL}/webhook/{productId}/status
+```
+
+### Formato de Respuesta
+
+```typescript
+interface PollingPayload {
+  productId: string;
+  status: 'processing' | 'completed' | 'failed';
+  message?: string;
+  product?: {
+    mercado_libre_listing?: {
+      permalink: string;
+    };
+  };
+}
+```
+
+---
+
+## English
 
 A React Native mobile application built with Expo that enables users to capture or select product photos and automatically create Mercado Libre listings through AI-powered image analysis.
+
+## Watch the demo
+
+[![Demo video](images/readme/demo-thumbnail-english.jpg)](https://youtu.be/cE6Fz6G4dP0?si=IcW5nnk49CJxh4ba)
 
 ## Features
 

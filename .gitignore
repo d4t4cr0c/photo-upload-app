@@ -20,6 +20,7 @@ android
 # Claude Code
 /.claude/
 /prompts/
+CALUDE.md
 
 # macOS
 .DS_Store
