@@ -1,5 +1,7 @@
 # MercadoFácil IA (Frontend App)
 
+App móvil para automatizar la creación de publicaciones en Mercado Libre con IA
+
 [English Version](#project-overview)
 
 ---
