@@ -6,7 +6,7 @@ App móvil para automatizar la creación de publicaciones en Mercado Libre con I
 
 ---
 
-## Ver la demo
+## Ver la demo en YouTube
 
 [![Video demo](images/readme/demo-thumbnail-spanish.jpg)](https://youtu.be/h2vEqL_I9pU?si=0lVIruNuDzCA_ObJ)
 
@@ -203,7 +203,7 @@ interface PollingPayload {
 
 A React Native mobile application built with Expo that enables users to capture or select product photos and automatically create Mercado Libre listings through AI-powered image analysis.
 
-## Watch the demo
+## Watch demo on YouTube
 
 [![Demo video](images/readme/demo-thumbnail-english.jpg)](https://youtu.be/cE6Fz6G4dP0?si=IcW5nnk49CJxh4ba)
 
