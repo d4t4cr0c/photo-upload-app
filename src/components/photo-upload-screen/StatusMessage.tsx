@@ -17,7 +17,7 @@ const statusInfo = {
     iconColor: '#51a2ff',
   },
   waiting: {
-    text: 'Procesando imágenes...',
+    text: 'Analizando imágenes...',
     color: 'text-green-400/90',
     bgColor: 'bg-green-500/10',
     borderColor: 'border-green-400/20',
@@ -41,7 +41,7 @@ const statusInfo = {
     iconColor: '#34d399',
   },
   failed: {
-    text: 'Error al procesar imágenes',
+    text: 'Error al crear publicación',
     color: 'text-red-400/90',
     bgColor: 'bg-red-300/12',
     borderColor: 'border-red-400/25',
